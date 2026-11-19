@@ -1,0 +1,12 @@
+# docker compose up -d
+# Configure with a .env file next to this one (copy .env.example). See docs/install/docker-compose.md
+services:
+  twd-design:
+    image: ghcr.io/brikev/twd-design:latest
+    build: .
+    env_file: .env
+    restart: unless-stopped
+    # Socket Mode (SLACK_APP_TOKEN set) needs no published port; publish it for HTTP mode or to reach /healthz.
+    ports:
+      - "3000:3000"
+    stop_grace_period: 70s   # a bit more than SHUTDOWN_TIMEOUT_MS so running turns can finish

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Slack sandbox probe</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap">
+<style>
+  :root { --ok: #0a7d32; --ko: #c1121f; --unk: #8a6d00; --bg: #fff; --fg: #1d1d1f; --muted: #6b6b70; --line: #e5e5ea; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #1c1c1e; --fg: #f2f2f7; --muted: #a1a1a6; --line: #3a3a3c; --ok: #30d158; --ko: #ff453a; --unk: #ffd60a; } }
+  body { margin: 0; padding: 16px; font: 14px/1.45 system-ui, sans-serif; background: var(--bg); color: var(--fg); }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  p { margin: 0 0 12px; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; }
+  td { padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  td:first-child { width: 42%; }
+  .ok { color: var(--ok); font-weight: 600; } .ko { color: var(--ko); font-weight: 600; } .unk { color: var(--unk); font-weight: 600; }
+  .detail { color: var(--muted); font-size: 12px; display: block; }
+  button { font: inherit; padding: 6px 10px; margin: 4px 4px 12px 0; }
+  #inter { font-family: Inter, monospace; }
+  textarea { width: 100%; height: 120px; font: 12px ui-monospace, monospace; box-sizing: border-box; }
+</style>
+</head>
+<body>
+<h1>Slack sandbox probe</h1>
+<p>Open this file in Slack's preview. Automatic checks run on load; the buttons test things that need a click. Copy the summary at the bottom and paste it back.</p>
+
+<button id="b-alert" type="button">alert()</button>
+<button id="b-confirm" type="button">confirm()</button>
+<button id="b-popup" type="button">window.open</button>
+<a id="b-blank" href="https://example.com" target="_blank" rel="noopener">target=_blank link</a>
+<button id="b-download" type="button">download a file</button>
+<button id="b-clipboard" type="button">copy to clipboard</button>
+<button id="b-fullscreen" type="button">fullscreen</button>
+
+<form id="f"><input name="q" value="x"><button id="b-submit">native form submit</button></form>
+
+<table><tbody id="rows"></tbody></table>
+<p id="inter">Inter webfont sample: the quick brown fox (should look like Inter if Google Fonts loads)</p>
+<textarea id="summary" readonly></textarea>
+
+<script>
+  const results = {};
+  const rows = document.getElementById('rows');
+  function report(name, status, detail = '') {
+    results[name] = { status, detail };
+    let tr = document.getElementById('r-' + name);
+    if (!tr) { tr = document.createElement('tr'); tr.id = 'r-' + name; rows.appendChild(tr); }
+    const cls = status === 'works' ? 'ok' : status === 'blocked' ? 'ko' : 'unk';
+    tr.innerHTML = `<td>${name}</td><td><span class="${cls}">${status}</span><span class="detail">${detail}</span></td>`;
+    document.getElementById('summary').value =
+      Object.entries(results).map(([k, v]) => `${k}: ${v.status}${v.detail ? ' (' + v.detail + ')' : ''}`).join('\n');
+  }
+  const safe = (name, fn) => { try { fn(); } catch (e) { report(name, 'blocked', e.name + ': ' + e.message); } };
+
+  // Context
+  report('in iframe', window.top !== window ? 'works' : 'pending', window.top !== window ? 'framed' : 'top-level (not sandboxed?)');
+  safe('origin', () => report('origin', 'works', String(location.origin)));
+  report('user agent', 'works', navigator.userAgent.slice(0, 90));
+
+  // Storage
+  safe('sessionStorage', () => { sessionStorage.setItem('p', '1'); report('sessionStorage', sessionStorage.getItem('p') === '1' ? 'works' : 'blocked'); });
+  safe('localStorage', () => { localStorage.setItem('p', '1'); report('localStorage', localStorage.getItem('p') === '1' ? 'works' : 'blocked'); });
+  safe('cookies', () => { document.cookie = 'p=1'; report('cookies', document.cookie.includes('p=1') ? 'works' : 'blocked'); });
+  safe('indexedDB', () => { const r = indexedDB.open('probe'); r.onsuccess = () => report('indexedDB', 'works'); r.onerror = () => report('indexedDB', 'blocked', String(r.error)); });
+
+  // Navigation
+  safe('location.hash', () => { location.hash = '#/probe'; report('location.hash', location.hash === '#/probe' ? 'works' : 'blocked'); });
+  safe('history.pushState', () => { history.pushState({}, '', '#/pushed'); report('history.pushState', location.hash === '#/pushed' ? 'works' : 'blocked'); history.replaceState({}, '', '#'); });
+
+  // APIs prototypes commonly use
+  safe('crypto.randomUUID', () => report('crypto.randomUUID', crypto.randomUUID() ? 'works' : 'blocked'));
+  safe('<dialog>.showModal', () => { const d = document.createElement('dialog'); document.body.appendChild(d); d.showModal(); report('<dialog>.showModal', d.open ? 'works' : 'blocked'); d.close(); d.remove(); });
+  safe('matchMedia', () => report('matchMedia', 'works', 'prefers dark: ' + matchMedia('(prefers-color-scheme: dark)').matches));
+  safe('Intl', () => report('Intl', 'works', new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(new Date())));
+
+  // Network / CSP
+  fetch('https://cdn.jsdelivr.net/npm/twd-js@1.13.0/package.json').then(r => report('fetch to CDN', r.ok ? 'works' : 'blocked', 'HTTP ' + r.status)).catch(e => report('fetch to CDN', 'blocked', e.message));
+  fetch('https://jsonplaceholder.typicode.com/todos/1').then(r => report('fetch to a public API', r.ok ? 'works' : 'blocked', 'HTTP ' + r.status)).catch(e => report('fetch to a public API', 'blocked', e.message));
+  { const s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/twd-js@1.13.0/dist/twd.global.js';
+    s.onload = () => report('external <script> (TWD)', window.TWD ? 'works' : 'blocked'); s.onerror = () => report('external <script> (TWD)', 'blocked'); document.body.appendChild(s); }
+  { const img = new Image(); img.onload = () => report('external image', 'works'); img.onerror = () => report('external image', 'blocked');
+    img.src = 'https://picsum.photos/seed/probe/40/40'; }
+  document.fonts.ready.then(() => setTimeout(() => report('Google Fonts (Inter)', document.fonts.check('16px Inter') ? 'works' : 'blocked'), 1500));
+  { const svg = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"/>');
+    const img = new Image(); img.onload = () => report('data: URI image', 'works'); img.onerror = () => report('data: URI image', 'blocked'); img.src = svg; }
+  addEventListener('securitypolicyviolation', e => report('CSP violation: ' + e.violatedDirective, 'blocked', e.blockedURI));
+
+  // Click-driven checks
+  for (const n of ['alert()', 'confirm()', 'window.open', 'target=_blank link', 'download', 'clipboard', 'fullscreen', 'native form submit'])
+    report(n, 'pending', 'click its button');
+  document.getElementById('b-alert').onclick = () => safe('alert()', () => { const t = Date.now(); alert('probe'); report('alert()', Date.now() - t > 150 ? 'works' : 'blocked', Date.now() - t > 150 ? 'dialog shown' : 'returned instantly, no dialog'); });
+  document.getElementById('b-confirm').onclick = () => safe('confirm()', () => { const t = Date.now(); const r = confirm('probe'); report('confirm()', Date.now() - t > 150 ? 'works' : 'blocked', 'returned ' + r); });
+  document.getElementById('b-popup').onclick = () => safe('window.open', () => { const w = window.open('https://example.com', '_blank'); report('window.open', w ? 'works' : 'blocked', w ? '' : 'returned null'); });
+  document.getElementById('b-blank').addEventListener('click', () => setTimeout(() => report('target=_blank link', 'pending', 'did a new tab open? note it manually'), 0));
+  document.getElementById('b-download').onclick = () => safe('download', () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['a,b\n1,2'], { type: 'text/csv' })); a.download = 'probe.csv'; a.click(); report('download', 'pending', 'did probe.csv download? note it manually'); });
+  document.getElementById('b-clipboard').onclick = () => navigator.clipboard ? navigator.clipboard.writeText('probe').then(() => report('clipboard', 'works'), e => report('clipboard', 'blocked', e.name + ': ' + e.message)) : report('clipboard', 'blocked', 'navigator.clipboard missing');
+  document.getElementById('b-fullscreen').onclick = () => document.documentElement.requestFullscreen ? document.documentElement.requestFullscreen().then(() => { report('fullscreen', 'works'); document.exitFullscreen(); }, e => report('fullscreen', 'blocked', e.message)) : report('fullscreen', 'blocked', 'API missing');
+  document.getElementById('f').addEventListener('submit', e => { e.preventDefault(); report('native form submit', 'works'); });
+  document.getElementById('b-submit').addEventListener('click', () => setTimeout(() => { if (results['native form submit'].status === 'pending') report('native form submit', 'blocked', 'submit event never fired'); }, 200));
+</script>
+</body>
+</html>

@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Projects — Prototype</title>
+
+<!-- Tailwind (browser build). Design tokens from the design guide go in @theme. -->
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.4"></script>
+<style type="text/tailwindcss">
+  @theme {
+    --color-primary: #2563eb;
+    --color-primary-hover: #1d4ed8;
+    --color-danger: #dc2626;
+    --color-success: #15803d;
+    --radius-card: 0.5rem;
+  }
+  [x-cloak] { display: none !important; }
+</style>
+</head>
+<body class="min-h-screen bg-gray-50 text-gray-900 antialiased">
+
+<script>
+  // PROTOTYPE ONLY: scaffolding so this file works standalone (Slack preview or a browser tab).
+  // Not part of the design; do not port. Real routes and endpoints are in the DEV comments.
+
+  // Slack's preview sandbox blocks form submission. This re-dispatches it as a plain `submit`
+  // event (after native validation) so the forms below work there too.
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[type=submit], button:not([type]), input[type=submit]');
+    const form = btn && btn.form;
+    if (!form) return;
+    e.preventDefault();
+    if (!form.noValidate && !form.reportValidity()) return;
+    form.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true, submitter: btn }));
+  }, true);
+
+  // PROTOTYPE: fake data · DEV: users come from the auth service, projects from GET /api/projects
+  const initialState = () => ({
+    users: [{ email: 'ana@example.com', password: 'password123', name: 'Ana García' }],
+    session: null,
+    projects: [
+      { id: 'p1', name: 'Website redesign', owner: 'Ana García' },
+      { id: 'p2', name: 'Mobile app', owner: 'Luis Martín' },
+    ],
+    loginError: '',
+    saved: false,
+    pendingDelete: null,
+  });
+
+  const ROUTES = ['login', 'projects'];
+  const parseRoute = () => {
+    const name = location.hash.replace('#/', '');
+    return ROUTES.includes(name) ? name : 'login';
+  };
+
+  document.addEventListener('alpine:init', () => {
+    Alpine.data('app', () => ({
+      ...initialState(),
+      route: 'login',
+
+      init() {
+        window.__app = this;
+        const go = () => this.navigate(parseRoute());
+        addEventListener('hashchange', go);
+        addEventListener('popstate', go); // twd.visit('#/route') uses pushState + popstate
+        go();
+      },
+
+      // Hash router with guards. Only the current screen is in the DOM (x-if).
+      navigate(name) {
+        if (name === 'projects' && !this.session) name = 'login';
+        if (name === 'login' && this.session) name = 'projects';
+        if (location.hash !== `#/${name}`) history.replaceState(null, '', `#/${name}`);
+        this.route = name;
+      },
+
+      login(form) {
+        const { email, password } = Object.fromEntries(new FormData(form));
+        const user = this.users.find((u) => u.email === email && u.password === password);
+        if (!user) { this.loginError = 'Wrong email or password.'; return; }
+        this.loginError = '';
+        this.session = { name: user.name, email: user.email };
+        this.navigate('projects');
+      },
+
+      logout() {
+        this.session = null;
+        this.navigate('login');
+      },
+
+      addProject(form) {
+        const name = new FormData(form).get('name').trim();
+        if (!name) return;
+        this.projects.push({ id: crypto.randomUUID(), name, owner: this.session.name });
+        this.saved = true;
+        form.reset();
+      },
+
+      askDelete(project) {
+        this.pendingDelete = project;
+        this.$refs.confirmDelete.showModal();
+      },
+
+      confirmDelete() {
+        this.projects = this.projects.filter((p) => p.id !== this.pendingDelete.id);
+        this.pendingDelete = null;
+        this.$refs.confirmDelete.close();
+      },
+    }));
+  });
+
+  // Scenarios await this in beforeEach so every scenario starts from the same state. It unmounts the
+  // current screen before mounting the first one again: x-if keeps a screen (and whatever was typed in
+  // its inputs) if the route doesn't change.
+  async function resetApp() {
+    const app = window.__app;
+    document.querySelectorAll('dialog[open]').forEach((d) => d.close());
+    Object.assign(app, initialState());
+    app.route = '';
+    await Alpine.nextTick();
+    history.replaceState(null, '', '#/login');
+    app.navigate('login');
+    await Alpine.nextTick();
+  }
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.17.5/dist/cdn.min.js"></script>
+
+<div x-data="app" x-cloak>
+  <header class="sticky top-0 z-10 border-b border-gray-200 bg-white/80 backdrop-blur">
+    <div class="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
+      <span class="text-xl font-semibold">Projects</span>
+      <nav aria-label="Main" class="flex items-center gap-4 text-sm font-medium">
+        <template x-if="session">
+          <div class="flex items-center gap-4">
+            <span class="text-gray-600" x-text="session.name"></span>
+            <button type="button" class="text-gray-700 hover:text-primary" @click="logout()">Log out</button>
+          </div>
+        </template>
+      </nav>
+    </div>
+  </header>
+
+  <main id="app" class="mx-auto max-w-5xl px-4 py-10">
+
+    <!-- DEV: route /login · no session required; with a session, redirect to /projects -->
+    <template x-if="route === 'login'">
+      <section class="mx-auto max-w-sm rounded-card bg-white p-6 shadow-md">
+        <h1 class="mb-6 text-2xl font-bold">Log in</h1>
+        <!-- DEV (proposed): POST /api/auth/login { email, password } → 200 + session · 401 wrong credentials -->
+        <form class="flex flex-col gap-4" @submit.prevent="login($el)">
+          <div>
+            <label for="login-email" class="mb-1 block text-sm font-medium">Email</label>
+            <input id="login-email" name="email" type="email" required autocomplete="email"
+                   class="w-full rounded-card border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary">
+          </div>
+          <div>
+            <label for="login-password" class="mb-1 block text-sm font-medium">Password</label>
+            <input id="login-password" name="password" type="password" required autocomplete="current-password"
+                   class="w-full rounded-card border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary">
+          </div>
+          <p role="alert" class="text-sm font-medium text-danger" x-show="loginError" x-text="loginError"></p>
+          <button type="submit" class="rounded-card bg-primary px-4 py-2 font-semibold text-white hover:bg-primary-hover">Log in</button>
+        </form>
+      </section>
+    </template>
+
+    <!-- DEV: route /projects · requires session, else redirect to /login -->
+    <template x-if="route === 'projects'">
+      <section class="mx-auto max-w-2xl">
+        <h1 class="mb-8 text-3xl font-bold">Your projects</h1>
+
+        <!-- DEV (proposed): POST /api/projects { name } → 201 project · 422 empty name -->
+        <form class="mb-8 flex gap-2" @submit.prevent="addProject($el)">
+          <label for="project-name" class="sr-only">Project name</label>
+          <input id="project-name" name="name" required placeholder="New project name"
+                 class="flex-1 rounded-card border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary">
+          <button type="submit" class="rounded-card bg-primary px-4 py-2 font-semibold text-white hover:bg-primary-hover">Add project</button>
+        </form>
+        <p role="status" class="-mt-6 mb-6 text-sm font-medium text-success" x-show="saved">Project added</p>
+
+        <!-- DEV: empty state when the user has no projects -->
+        <p class="text-gray-500" x-show="projects.length === 0">No projects yet.</p>
+        <p class="mb-2 text-sm text-gray-500" x-show="projects.length" x-text="`${projects.length} projects`"></p>
+
+        <!-- DEV (proposed): GET /api/projects → [{ id, name, owner }] -->
+        <ul class="flex flex-col gap-3">
+          <template x-for="project in projects" :key="project.id">
+            <li class="flex items-center justify-between rounded-card bg-white p-4 shadow-md">
+              <div>
+                <h2 class="font-semibold" x-text="project.name"></h2>
+                <p class="text-sm text-gray-500" x-text="`Owner: ${project.owner}`"></p>
+              </div>
+              <button type="button" class="rounded px-3 py-1 text-sm font-semibold text-danger hover:bg-red-50"
+                      :aria-label="`Delete ${project.name}`" @click="askDelete(project)">Delete</button>
+            </li>
+          </template>
+        </ul>
+      </section>
+    </template>
+  </main>
+
+  <!-- Confirmation modal (outside #app: scenarios query it with screenDomGlobal) -->
+  <!-- DEV (proposed): DELETE /api/projects/:id → 204 -->
+  <dialog x-ref="confirmDelete" aria-labelledby="confirm-delete-title"
+          class="m-auto rounded-card p-6 shadow-lg backdrop:bg-black/40">
+    <h2 id="confirm-delete-title" class="mb-2 text-lg font-semibold">Delete project?</h2>
+    <p class="mb-6 text-gray-600">
+      <span x-text="pendingDelete?.name"></span> will be deleted for everyone.
+    </p>
+    <div class="flex justify-end gap-2">
+      <button type="button" class="rounded-card px-4 py-2 font-medium hover:bg-gray-100"
+              @click="$refs.confirmDelete.close()">Cancel</button>
+      <button type="button" class="rounded-card bg-danger px-4 py-2 font-semibold text-white"
+              @click="confirmDelete()">Yes, delete project</button>
+    </div>
+  </dialog>
+
+  <!-- PROTOTYPE ONLY: screen switcher for reviewers -->
+  <nav aria-label="Prototype screens"
+       class="fixed inset-x-0 bottom-0 flex items-center justify-center gap-4 bg-[#123956] px-4 py-2 text-sm text-gray-200">
+    <a href="#/login" class="hover:text-white">Log in</a>
+    <a href="#/projects" class="hover:text-white">Projects</a>
+    <span class="ml-auto hidden text-xs text-[#9fd8da] sm:inline">
+      Prototype · tests by <a href="https://twd.dev" target="_blank" rel="noopener" class="underline hover:text-white">TWD</a>
+    </span>
+  </nav>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/twd-js@1.13.0/dist/twd.global.js"></script>
+<script>
+  sessionStorage.setItem('twd-pace', sessionStorage.getItem('twd-pace') || '600');
+  const { initTWD, describe, it, beforeEach, twd, userEvent, screenDom, screenDomGlobal, expect } = window.TWD;
+
+  async function logIn(user) {
+    await user.type(await screenDom.findByLabelText('Email'), 'ana@example.com');
+    await user.type(await screenDom.findByLabelText('Password'), 'password123');
+    await user.click(await screenDom.findByRole('button', { name: 'Log in' }));
+    await screenDom.findByRole('heading', { name: 'Your projects' });
+  }
+
+  initTWD(
+    {
+      scenarios: async () => {
+        describe('Projects', () => {
+          beforeEach(() => resetApp());
+
+          it('logs in and sees their projects', async () => {
+            const user = userEvent.setup();
+            await logIn(user);
+            twd.should(await screenDom.findByText('2 projects'), 'be.visible');
+            twd.should(await screenDom.findByRole('heading', { name: 'Website redesign' }), 'be.visible');
+          });
+
+          it('shows an error with wrong credentials', async () => {
+            const user = userEvent.setup();
+            await user.type(await screenDom.findByLabelText('Email'), 'ana@example.com');
+            await user.type(await screenDom.findByLabelText('Password'), 'nope');
+            await user.click(await screenDom.findByRole('button', { name: 'Log in' }));
+            twd.should(await screenDom.findByRole('alert'), 'have.text', 'Wrong email or password.');
+          });
+
+          it('adds a project', async () => {
+            const user = userEvent.setup();
+            await logIn(user);
+            await user.type(await screenDom.findByLabelText('Project name'), 'Billing');
+            await user.click(await screenDom.findByRole('button', { name: 'Add project' }));
+            twd.should(await screenDom.findByRole('heading', { name: 'Billing' }), 'be.visible');
+            twd.should(await screenDom.findByRole('status'), 'have.text', 'Project added');
+            twd.should(await screenDom.findByText('3 projects'), 'be.visible');
+          });
+
+          it('deletes a project after confirming', async () => {
+            const user = userEvent.setup();
+            await logIn(user);
+            await user.click(await screenDom.findByRole('button', { name: 'Delete Mobile app' }));
+            await screenDomGlobal.findByRole('dialog', { name: 'Delete project?' });
+            await user.click(await screenDomGlobal.findByRole('button', { name: 'Yes, delete project' }));
+            twd.should(await screenDom.findByText('1 projects'), 'be.visible');
+            expect(screenDom.queryByRole('heading', { name: 'Mobile app' })).to.equal(null);
+          });
+
+          it('sends visitors without a session to log in', async () => {
+            await twd.visit('#/projects');
+            twd.should(await screenDom.findByRole('heading', { name: 'Log in' }), 'be.visible');
+          });
+        });
+      },
+    },
+    { open: false, serviceWorker: false, search: true, pace: true },
+  );
+</script>
+</body>
+</html>

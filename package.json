@@ -1,0 +1,26 @@
+{
+  "name": "twd-design",
+  "version": "0.1.0",
+  "description": "Slack bot that turns requests into clickable HTML prototypes with TWD acceptance scenarios, and opens them as pull requests",
+  "scripts": {
+    "dev": "node --watch --env-file-if-exists=.env src/index.ts",
+    "start": "node src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "author": "",
+  "license": "MIT",
+  "type": "module",
+  "dependencies": {
+    "@mastra/core": "^1.85.0",
+    "@slack/bolt": "^5.1.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "typescript": "^7.0.2"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "private": true
+}

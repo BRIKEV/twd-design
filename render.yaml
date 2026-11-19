@@ -1,0 +1,26 @@
+# Render Blueprint: builds the same Dockerfile used everywhere else.
+# Socket Mode (SLACK_APP_TOKEN set) needs no public URL; Render still uses /healthz to check the service.
+# Note: Render's free web services sleep when idle. Use a paid instance (or a background worker in
+# Socket Mode) so the bot is always connected. See docs/install/render.md
+services:
+  - type: web
+    name: twd-design
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: starter
+    healthCheckPath: /healthz
+    envVars:
+      - key: SLACK_BOT_TOKEN
+        sync: false
+      - key: SLACK_APP_TOKEN
+        sync: false
+      - key: SLACK_SIGNING_SECRET
+        sync: false
+      - key: MODEL
+        value: zai/glm-5.3-flash
+      - key: ZHIPU_API_KEY
+        sync: false
+      - key: GITHUB_APP_ID
+        sync: false
+      - key: GITHUB_PRIVATE_KEY
+        sync: false

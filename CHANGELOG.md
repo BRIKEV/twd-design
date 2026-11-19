@@ -1,0 +1,16 @@
+# Changelog
+
+All notable changes to this project are documented here. The project follows [Semantic Versioning](https://semver.org).
+
+## [Unreleased]
+
+### Added
+- TWD Design branding: name, *Test While Designing* tagline, TWD colors and icon (`brand/`), MIT license.
+- Slack bot that turns requests into single-file HTML prototypes and iterates on them in the thread.
+- Stateless design: the thread is the history, the last attached `.html` is the current version.
+- Design guide from the linked repo (`design/DESIGN.md`) through a GitHub App.
+- Pull request with the approved prototype and an `intent.md`.
+- Alpine.js + Tailwind reference template with TWD scenarios that pass in Slack's preview.
+- Form shim injected automatically for Slack's sandboxed preview.
+- Docker image, `docker-compose.yml`, Render blueprint.
+- `/healthz`, configuration validation at startup, JSON logs, graceful shutdown on `SIGTERM`.

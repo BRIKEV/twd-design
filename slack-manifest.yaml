@@ -1,0 +1,41 @@
+# TWD Design: Slack app manifest.
+# Create the app at https://api.slack.com/apps → Create New App → From a manifest → paste this file.
+# Guide: docs/setup/slack-app.md
+#
+#   CHANGE  = make it yours (names, description)
+#   KEEP    = the bot needs it as is
+
+display_information:
+  name: TWD Design                               # CHANGE: the app name people see in Slack
+  description: "Test While Designing: clickable prototypes with acceptance tests, right in the thread"   # CHANGE
+  long_description: "Ask in a thread how a screen would look. TWD Design answers with a clickable HTML prototype that uses your design guide, carries its acceptance criteria as TWD scenarios you can run in the page, and notes for whoever implements it. Iterate in the thread until the team agrees, then it opens a pull request in your repo. Self-hosted: your Slack app, your GitHub App, your model key. https://twd.dev"   # CHANGE
+  background_color: "#123956"                    # CHANGE: app card color (TWD deep teal). Icon: brand/slack-icon.png, uploaded in Basic Information.
+
+features:
+  bot_user:
+    display_name: twd-design                     # CHANGE: the @handle people mention
+    always_online: true                          # KEEP
+
+oauth_config:
+  scopes:
+    bot:                                         # KEEP all of them. Why each one: docs/setup/slack-app.md#scopes
+      - app_mentions:read                        # receive @mentions
+      - chat:write                               # reply in the thread
+      - files:write                              # attach the prototype .html
+      - files:read                               # download the latest prototype from the thread
+      - channels:history                         # read the thread in public channels
+      - groups:history                           # read the thread in private channels
+      - reactions:write                          # ⏳ on your message while it works
+
+settings:
+  event_subscriptions:
+    # HTTP mode only: uncomment and point it to your deployment.
+    # request_url: https://twd-design.example.com/slack/events
+    bot_events:                                  # KEEP
+      - app_mention                              # a mention starts or continues a thread
+      - message.channels                         # replies in public threads, without mentioning the bot
+      - message.groups                           # same, in private channels
+  # Socket Mode: the bot connects out to Slack, no public URL needed. Set to false for HTTP mode.
+  socket_mode_enabled: true
+  org_deploy_enabled: false                      # KEEP
+  token_rotation_enabled: false                  # KEEP
