@@ -49,7 +49,7 @@ describe('Setting up the GitHub App', () => {
     lookups = 0;
   });
 
-  test('Marta creates Acme\'s App in the acme org, checks it reaches acme/web, and never copies a key', async () => {
+  test('Sabrina creates Acme\'s App in the acme org, checks it reaches acme/web, and never copies a key', async () => {
     writeFileSync(envFile, 'SLACK_BOT_TOKEN=xoxb-good\n');
     const term = scriptedTerminal(['acme', '', 'https://github.com/acme/web']);
     const setup = setupGithub({ ...term, envFile, defaultName: 'Acme Design' });

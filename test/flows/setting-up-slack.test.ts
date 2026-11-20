@@ -29,7 +29,7 @@ describe('Setting up the Slack app', () => {
   let envFile: string;
   beforeEach(() => { envFile = join(mkdtempSync(join(tmpdir(), 'twd-setup-')), '.env'); });
 
-  test('Marta creates the app with Acme\'s name, handle and color, and gets a working .env', async () => {
+  test('Sabrina creates the app with Acme\'s name, handle and color, and gets a working .env', async () => {
     writeFileSync(envFile, 'MODEL=zai/glm-5.3-flash\nSLACK_BOT_TOKEN=xoxb-old\n');
     const term = scriptedTerminal(['Acme Design', 'acme-design', '#e4572e', 'xoxb-good', 'xapp-good']);
 

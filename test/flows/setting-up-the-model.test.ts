@@ -50,7 +50,7 @@ describe('Setting up the model', () => {
     thinksFirst = false;
   });
 
-  test('Marta keeps the recommended model, and her key is tried before it is saved', async () => {
+  test('Sabrina keeps the recommended model, and her key is tried before it is saved', async () => {
     const term = scriptedTerminal(['', 'zai-good']);
     await setupModel({ ...term, envFile });
 
