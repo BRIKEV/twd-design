@@ -5,23 +5,83 @@ import type { DesignContext } from '../agent/types.ts';
 import { AppNotInstalledError } from '../github/client.ts';
 import { readRepoFile } from '../github/files.ts';
 import { errorFields, log } from '../log.ts';
-import { loadThread } from './thread.ts';
+import { nextStepsBlocks, replacedBlocks } from './blocks.ts';
+import { loadThread, UI, type NextSteps } from './thread.ts';
 
-// In-memory only: avoids two runs on the same thread at once, and lets shutdown wait for running turns.
-const busyThreads = new Set<string>();
+// In-memory only: avoids two runs on the same thread at once, lets someone stop a running turn,
+// and lets shutdown wait for running turns.
+const running = new Map<string, AbortController>();
 let accepting = true;
 
 /** Stop starting new turns and resolve when the running ones finish (or the timeout passes). */
 export async function drainTurns(timeoutMs: number) {
   accepting = false;
   const deadline = Date.now() + timeoutMs;
-  while (busyThreads.size > 0 && Date.now() < deadline) await new Promise((r) => setTimeout(r, 250));
-  return busyThreads.size;
+  while (running.size > 0 && Date.now() < deadline) await new Promise((r) => setTimeout(r, 250));
+  return running.size;
 }
 
 export const isAccepting = () => accepting;
+export const isBusy = (channel: string, threadTs: string) => running.has(`${channel}:${threadTs}`);
+
+/** Someone pressed Stop: the running turn on that thread ends without posting its version. */
+export function stopTurn(channel: string, threadTs: string, user: string) {
+  running.get(`${channel}:${threadTs}`)?.abort({ user });
+}
 
 type Turn = { client: WebClient; botUserId: string; channel: string; threadTs: string; messageTs: string };
+
+/**
+ * Slack's own "working…" indicator, with its Stop button. Workspaces without agent sessions get an
+ * hourglass on the message instead.
+ */
+async function showWorking(client: WebClient, channel: string, threadTs: string, messageTs: string) {
+  const status = (s: 'processing' | 'active') => client.agents.sessions.setStatus({ channel_id: channel, thread_ts: threadTs, status: s });
+  try {
+    await status('processing');
+    return () => status('active').catch(() => {});
+  } catch {
+    const reaction = { channel, timestamp: messageTs, name: 'hourglass_flowing_sand' };
+    await client.reactions.add(reaction).catch(() => {});
+    return () => client.reactions.remove(reaction).catch(() => {});
+  }
+}
+
+type NewVersion = {
+  channel: string;
+  threadTs: string;
+  filename: string;
+  html: string;
+  comment: string;
+  version: number;
+  turn: number;
+  repo: string | null;
+  previous?: NextSteps;
+};
+
+/** Posts a version with the buttons under it, and takes the buttons off the one it replaces. */
+export async function postVersion(client: WebClient, v: NewVersion) {
+  await client.files.uploadV2({
+    channel_id: v.channel,
+    thread_ts: v.threadTs,
+    filename: v.filename,
+    title: v.filename,
+    content: v.html,
+    initial_comment: v.comment,
+  });
+  if (v.previous) {
+    await client.chat
+      .update({ channel: v.channel, ts: v.previous.ts, text: `v${v.previous.version}: replaced by v${v.version}`, blocks: replacedBlocks(v.previous.version, v.version) })
+      .catch((err) => log.warn('could not update the previous buttons', errorFields(err)));
+  }
+  await client.chat.postMessage({
+    channel: v.channel,
+    thread_ts: v.threadTs,
+    text: `v${v.version}: approve it, or reply in the thread to change it`,
+    blocks: nextStepsBlocks({ version: v.version, turn: v.turn, maxTurns: config.maxTurnsPerThread, repo: v.repo, github: config.github.enabled }),
+    metadata: { event_type: UI, event_payload: { kind: 'next_steps', version: v.version, turn: v.turn } },
+  });
+}
 
 /** One bot turn: read the thread, run the agent, post the new version (or the answer) in the thread. */
 export async function handleTurn({ client, botUserId, channel, threadTs, messageTs }: Turn) {
@@ -31,15 +91,16 @@ export async function handleTurn({ client, botUserId, channel, threadTs, message
     await say('Restarting right now, ask again in a minute.');
     return;
   }
-  if (busyThreads.has(key)) {
+  if (running.has(key)) {
     await say('Still working on the previous version, give me a moment.');
     return;
   }
-  busyThreads.add(key);
-  await client.reactions.add({ channel, timestamp: messageTs, name: 'hourglass_flowing_sand' }).catch(() => {});
+  const stop = new AbortController();
+  running.set(key, stop);
+  const doneWorking = await showWorking(client, channel, threadTs, messageTs);
 
   try {
-    const { history, state, botTurns, repo } = await loadThread(client, botUserId, channel, threadTs);
+    const { history, state, botTurns, repo, versions, nextSteps } = await loadThread(client, botUserId, channel, threadTs);
     if (botTurns >= config.maxTurnsPerThread) {
       await say(`This thread hit the ${config.maxTurnsPerThread}-turn limit. Start a new thread to keep going.`);
       return;
@@ -62,7 +123,7 @@ export async function handleTurn({ client, botUserId, channel, threadTs, message
       .catch(() => undefined);
 
     const started = Date.now();
-    const { text, usage } = await runDesignAgent(history, state, { design, threadUrl });
+    const { text, usage } = await runDesignAgent(history, state, { design, threadUrl }, stop.signal);
     log.info('turn', {
       thread: key,
       turn: botTurns + 1,
@@ -73,18 +134,28 @@ export async function handleTurn({ client, botUserId, channel, threadTs, message
       pr: state.pr?.url,
       changed: state.changed,
       bytes: state.html?.length,
+      stopped: stop.signal.aborted || undefined,
       usage,
     });
 
+    if (stop.signal.aborted) {
+      const { user } = stop.signal.reason as { user: string };
+      await say(`Stopped by <@${user}>. ${versions.length ? `v${versions.length} is still the current version.` : 'Nothing was posted.'}`);
+      return;
+    }
+
     const reply = text?.trim() || 'Done.';
     if (state.changed && state.html) {
-      await client.files.uploadV2({
-        channel_id: channel,
-        thread_ts: threadTs,
+      await postVersion(client, {
+        channel,
+        threadTs,
         filename: state.filename,
-        title: state.filename,
-        content: state.html,
-        initial_comment: reply,
+        html: state.html,
+        comment: reply,
+        version: versions.length + 1,
+        turn: botTurns + 1,
+        repo,
+        previous: nextSteps,
       });
     } else {
       await say(reply);
@@ -93,7 +164,7 @@ export async function handleTurn({ client, botUserId, channel, threadTs, message
     log.error('turn failed', { thread: key, ...errorFields(err) });
     await say(`Something failed: ${(err as Error).message}`);
   } finally {
-    busyThreads.delete(key);
-    await client.reactions.remove({ channel, timestamp: messageTs, name: 'hourglass_flowing_sand' }).catch(() => {});
+    running.delete(key);
+    await doneWorking();
   }
 }

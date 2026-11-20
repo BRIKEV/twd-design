@@ -25,11 +25,17 @@ export function scriptedModel() {
   const queue: Step[] = [];
   const prompts: Prompt[] = [];
   let fail: string | undefined;
+  let hang = false;
 
   setModel(new MastraLanguageModelV2Mock({
-    doGenerate: async ({ prompt }: { prompt: Prompt }) => {
+    doGenerate: async ({ prompt, abortSignal }: { prompt: Prompt; abortSignal?: AbortSignal }) => {
       prompts.push(prompt);
       if (fail) { const e = fail; fail = undefined; throw new Error(e); }
+      if (hang) {
+        hang = false;
+        // A slow model: it only ends when the turn is stopped.
+        await new Promise((_, reject) => abortSignal?.addEventListener('abort', () => reject(new Error('aborted'))));
+      }
       const content = queue.shift();
       if (!content) throw new Error('The scripted model has no step left: the bot called the model more often than the story expects.');
       return {
@@ -46,6 +52,13 @@ export function scriptedModel() {
     /** The steps the model takes in the next turn, in order. */
     willDo: (...steps: Step[]) => { queue.push(...steps); },
     willFail: (message: string) => { fail = message; },
+    /** The next call takes forever, until someone stops the turn. */
+    willHang: () => { hang = true; },
+    /** Resolves once the model has been called n times in total. */
+    waitForCalls: async (n: number) => {
+      for (let i = 0; i < 200 && prompts.length < n; i++) await new Promise((r) => setTimeout(r, 5));
+      if (prompts.length < n) throw new Error(`The model was called ${prompts.length} times, expected ${n}`);
+    },
     calls: () => prompts.length,
     /** What the model received on call number n (0-based): pass calls() taken before a turn to see how that turn started. */
     saw: (n: number) => text(prompts[n] ?? []),

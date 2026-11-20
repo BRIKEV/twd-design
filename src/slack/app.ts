@@ -1,12 +1,16 @@
 import bolt from '@slack/bolt';
 import { config, socketMode } from '../config.ts';
 import { boltLogger } from '../log.ts';
+import { onAction, onHomeOpened, onStop, onViewSubmission, type ActionBody, type ViewBody } from './actions.ts';
 import { onMention, onMessage, type MessageEvent } from './events.ts';
 import { isAccepting } from './turn.ts';
 
 const { App } = bolt;
 
-/** The Bolt app with its two entry points (events.ts): mentions, and replies in threads the bot is already in. */
+/**
+ * The Bolt app. Conversation (events.ts): mentions, and replies in threads the bot is already in.
+ * Buttons, the repo modal, Slack's Stop button and the Home tab (actions.ts).
+ */
 export function createSlackApp(getBotUserId: () => string) {
   const app = new App({
     token: config.slack.botToken,
@@ -32,6 +36,20 @@ export function createSlackApp(getBotUserId: () => string) {
   app.event('app_mention', ({ event, client, context }) => onMention({ event, client, context }, getBotUserId()));
   app.message(({ message, client, context }) =>
     onMessage({ message: message as MessageEvent, client, context }, getBotUserId()));
+
+  // Slack wants every click and submit acknowledged within 3 seconds; the work happens after.
+  app.action(/^twd_/, async ({ ack, body, client }) => {
+    await ack();
+    await onAction({ body: body as unknown as ActionBody, client }, getBotUserId());
+  });
+  app.view('twd_pick_repo', async ({ ack, body, client }) => {
+    await ack();
+    await onViewSubmission({ body: body as unknown as ViewBody, client }, getBotUserId());
+  });
+  app.event('app_home_opened', ({ event, client }) => onHomeOpened({ event, client }));
+  // Not in Bolt's event types yet.
+  app.event('agent_session_stopped' as 'app_home_opened', ({ event }) =>
+    onStop({ event: event as unknown as { channel: string; thread_ts: string; user: string } }));
 
   return app;
 }

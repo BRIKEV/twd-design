@@ -18,12 +18,15 @@ Self-hosted and open source: your Slack app, your GitHub App, your model key. No
 design  (TWD Design)  →  build  (twd-js + twd-ai)  →  CI  (twd-cli)  →  review  (twd-relay, recordings)
 ```
 
+- **Guided in Slack.** Say hi and it explains itself with examples. Each version comes with buttons to
+  approve it, go back, or pick the repo from a list; Slack's Stop button cancels a turn.
+  [What your team sees](docs/guides/working-in-slack.md).
 - **Iterate in the thread.** Reply "and on mobile?" and the bot posts a new version that keeps what was agreed.
 - **Uses your design.** Paste a GitHub repo link and it designs with that repo's `design/DESIGN.md`.
 - **Speaks to developers.** Real routes and proposed endpoints live in `DEV:` comments; prototype-only
   scaffolding is marked `PROTOTYPE ONLY`.
-- **Ships as a PR.** Say "approved, open the PR" and it commits `design/prototypes/<feature>/index.html`
-  plus an `intent.md` on a new branch.
+- **Ships as a PR.** Click Approve (or say so) and it commits `design/prototypes/<feature>/index.html`
+  plus an `intent.md` on a new branch. The app's Home tab lists the prototypes waiting to be built.
 - **Stateless.** No database: the Slack thread is the history, the last attached `.html` is the current
   version, and the last GitHub link is the repo.
 
@@ -50,6 +53,8 @@ src/
   slack/
     app.ts                 Bolt app wiring and /healthz
     events.ts              when the bot answers (mentions, follow-ups) and when it stays quiet
+    actions.ts             buttons, the repo picker, Slack's Stop button, the Home tab
+    blocks.ts              every fixed message: welcome, buttons under a version, modal, pending list
     thread.ts              reads the thread: history, current prototype, linked repo
     turn.ts                one bot turn, end to end
   agent/
@@ -62,6 +67,7 @@ src/
   github/
     client.ts              GitHub App auth (JWT → installation token)
     files.ts               read repo files, find the repo linked in the thread
+    repos.ts               repos the App is installed on, open prototype PRs
     pull-request.ts        branch + single commit + PR
   prototype/
     form-shim.ts           makes forms work in Slack's sandboxed preview
@@ -78,7 +84,7 @@ diagnostics/
   slack-sandbox-probe.html measures what Slack's preview allows (open it in Slack)
 docs/
   index.md                 documentation home
-  guides/                  the way of working: your design guide (more coming)
+  guides/                  the way of working: working in Slack, your design guide
   setup/                   Slack app, GitHub App, model
   install/                 Docker, Docker Compose, Render
   reference/               configuration, security, observability, troubleshooting

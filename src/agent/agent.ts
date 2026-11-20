@@ -18,7 +18,7 @@ let model: MastraModelConfig = config.model.id;
 export const setModel = (m: MastraModelConfig) => { model = m; };
 
 /** Runs one turn: the thread so far + design guide + current prototype in, reply text out. */
-export async function runDesignAgent(history: ChatMessage[], state: PrototypeState, ctx: TurnContext) {
+export async function runDesignAgent(history: ChatMessage[], state: PrototypeState, ctx: TurnContext, abortSignal?: AbortSignal) {
   const agent = new Agent({
     id: 'twd-design',
     name: 'TWD Design',
@@ -28,7 +28,7 @@ export async function runDesignAgent(history: ChatMessage[], state: PrototypeSta
   });
 
   const messages = [...designMessages(ctx.design), ...prototypeMessages(state), ...history];
-  const result = await agent.generate(messages, { maxSteps: 8, providerOptions });
+  const result = await agent.generate(messages, { maxSteps: 8, providerOptions, abortSignal });
   return { text: result.text, usage: result.usage };
 }
 

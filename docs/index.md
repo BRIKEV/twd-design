@@ -35,6 +35,11 @@ feature starts from those scenarios and builds until they pass in the real app.
 4. Run it: [Docker](./install/docker.md), [Docker Compose](./install/docker-compose.md) or [Render](./install/render.md). *5 min*
 5. Invite the bot to a channel and mention it.
 
+## Guides
+
+- [Working in Slack](./guides/working-in-slack.md): what your team sees, from the first mention to the PR
+- [Your design guide](./guides/design-md.md): the `DESIGN.md` that makes prototypes look like your product
+
 ## Reference
 
 - [Configuration](./reference/configuration.md): every environment variable

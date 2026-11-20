@@ -29,8 +29,8 @@ describe('A designer and a PM shape a login screen with the bot and hand it to d
     const [v1] = slack.versions(thread);
     assert.equal(v1.name, 'login.html');
     assert.match(v1.html, /twd-design:form-shim/, 'the form works in the Slack preview');
-    assert.match(slack.lastReply(thread)!.text!, /first version/);
-    assert.deepEqual(slack.reactions, ['+hourglass_flowing_sand', '-hourglass_flowing_sand'], 'Ana saw the bot working');
+    assert.match(slack.botReplies(thread).find((m) => m.html)!.text!, /first version/);
+    assert.deepEqual(slack.statuses, ['processing', 'active'], 'Ana saw the bot working');
   });
 
   test('Bruno asks for a change in the thread, without mentioning the bot, and gets v2', async () => {

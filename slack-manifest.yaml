@@ -15,6 +15,10 @@ features:
   bot_user:
     display_name: twd-design                     # CHANGE: the @handle people mention
     always_online: true                          # KEEP
+  app_home:                                      # KEEP: the Home tab shows how to use it and what is waiting to be built
+    home_tab_enabled: true
+    messages_tab_enabled: false
+    messages_tab_read_only_enabled: false
 
 oauth_config:
   scopes:
@@ -25,7 +29,7 @@ oauth_config:
       - files:read                               # download the latest prototype from the thread
       - channels:history                         # read the thread in public channels
       - groups:history                           # read the thread in private channels
-      - reactions:write                          # ⏳ on your message while it works
+      - reactions:write                          # ⏳ on your message while it works, where Slack's own indicator isn't available
 
 settings:
   event_subscriptions:
@@ -35,6 +39,12 @@ settings:
       - app_mention                              # a mention starts or continues a thread
       - message.channels                         # replies in public threads, without mentioning the bot
       - message.groups                           # same, in private channels
+      - app_home_opened                          # the Home tab: how to use it, prototypes waiting to be built
+      - agent_session_stopped                    # the Stop button while the bot works
+  interactivity:                                 # KEEP: buttons (approve, back, pick repo, examples) and the repo modal
+    is_enabled: true
+    # HTTP mode only: same URL as the events.
+    # request_url: https://twd-design.example.com/slack/events
   # Socket Mode: the bot connects out to Slack, no public URL needed. Set to false for HTTP mode.
   socket_mode_enabled: true
   org_deploy_enabled: false                      # KEEP

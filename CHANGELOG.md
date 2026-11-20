@@ -4,7 +4,11 @@ All notable changes to this project are documented here. The project follows [Se
 
 ## [Unreleased]
 
+### Changed
+- Existing Slack apps need the new manifest (interactivity, Home tab, `app_home_opened` and `agent_session_stopped` events). See "Updating an app you created before" in `docs/setup/slack-app.md`.
+
 ### Added
+- Guided Slack experience. A welcome with examples when the bot is greeted or mentioned on its own. Buttons under the latest version to approve it (opens the PR), go back to the previous version, and pick the repo from the ones the GitHub App is installed on. Slack's own working indicator with a Stop button. A Home tab, and "@bot pending", with the prototypes waiting to be built (open design PRs). Guide: `docs/guides/working-in-slack.md`.
 - `npm run setup`: creates the Slack app with your name, handle and color from a one-click link, checks the tokens against Slack and writes them to `.env`. One-click default link in the docs.
 - `npm run setup` creates the GitHub App from a manifest in the browser (right permissions, no webhook), saves the App ID and private key to `.env`, and checks the App reaches a repo and whether it has a `DESIGN.md`.
 - `npm run setup` asks for the model and its API key, explains typos in the model name with close matches, tries the key with one tiny request, and saves both to `.env`.

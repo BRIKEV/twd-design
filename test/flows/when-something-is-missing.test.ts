@@ -63,7 +63,7 @@ describe('When something is missing or fails, the thread says what to do', () =>
     model.willFail('Rate limit exceeded');
     await slack.post('U_ANA', 'monthly invoices, with download', { thread: chat });
     assert.match(slack.lastReply(chat)!.text!, /^Something failed: .*Rate limit exceeded/);
-    assert.equal(slack.reactions.at(-1), '-hourglass_flowing_sand', 'the hourglass never stays on');
+    assert.equal(slack.statuses.at(-1), 'active', 'the working indicator never stays on');
 
     model.willDo(decide.reply('Here it is.'));
     await slack.post('U_ANA', 'try again', { thread: chat });
