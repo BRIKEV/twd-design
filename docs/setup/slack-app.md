@@ -10,6 +10,20 @@ The repo ships a manifest, so creating the app is a paste and a few clicks. Abou
 
 ## 1. Create it from the manifest
 
+**The quickest way** is the setup command, from a clone of the repo. It asks for your app's name, handle and
+color, gives you a link that creates the app with them, then checks the tokens against Slack and
+writes them to `.env`:
+
+```bash
+npm install
+npm run setup
+```
+
+**Or create it with the TWD Design defaults** in one click, and rename it later in the app settings:
+[Create the Slack app](https://api.slack.com/apps?new_app=1&manifest_yaml=display_information%3A%0A%20%20name%3A%20%22TWD%20Design%22%0A%20%20description%3A%20%22Test%20While%20Designing%3A%20clickable%20prototypes%20with%20acceptance%20tests%2C%20right%20in%20the%20thread%22%0A%20%20long_description%3A%20%22Ask%20in%20a%20thread%20how%20a%20screen%20would%20look.%20TWD%20Design%20answers%20with%20a%20clickable%20HTML%20prototype%20that%20uses%20your%20design%20guide%2C%20carries%20its%20acceptance%20criteria%20as%20TWD%20scenarios%20you%20can%20run%20in%20the%20page%2C%20and%20notes%20for%20whoever%20implements%20it.%20Iterate%20in%20the%20thread%20until%20the%20team%20agrees%2C%20then%20it%20opens%20a%20pull%20request%20in%20your%20repo.%20Self-hosted%3A%20your%20Slack%20app%2C%20your%20GitHub%20App%2C%20your%20model%20key.%20https%3A%2F%2Ftwd.dev%22%0A%20%20background_color%3A%20%22%23123956%22%0A%0Afeatures%3A%0A%20%20bot_user%3A%0A%20%20%20%20display_name%3A%20%22twd-design%22%0A%20%20%20%20always_online%3A%20true%0A%0Aoauth_config%3A%0A%20%20scopes%3A%0A%20%20%20%20bot%3A%0A%20%20%20%20%20%20-%20app_mentions%3Aread%0A%20%20%20%20%20%20-%20chat%3Awrite%0A%20%20%20%20%20%20-%20files%3Awrite%0A%20%20%20%20%20%20-%20files%3Aread%0A%20%20%20%20%20%20-%20channels%3Ahistory%0A%20%20%20%20%20%20-%20groups%3Ahistory%0A%20%20%20%20%20%20-%20reactions%3Awrite%0A%0Asettings%3A%0A%20%20event_subscriptions%3A%0A%20%20%20%20bot_events%3A%0A%20%20%20%20%20%20-%20app_mention%0A%20%20%20%20%20%20-%20message.channels%0A%20%20%20%20%20%20-%20message.groups%0A%20%20socket_mode_enabled%3A%20true%0A%20%20org_deploy_enabled%3A%20false%0A%20%20token_rotation_enabled%3A%20false).
+
+**Or by hand:**
+
 1. Go to [api.slack.com/apps](https://api.slack.com/apps) → **Create New App** → **From a manifest**.
 2. Pick the workspace.
 3. Paste the contents of [`slack-manifest.yaml`](https://github.com/BRIKEV/twd-design/blob/main/slack-manifest.yaml) (YAML tab) → **Next** → **Create**.
@@ -34,6 +48,8 @@ look comes from your repo's `DESIGN.md`, see [Your design guide](../guides/desig
 :::
 
 ## 2. Get the tokens
+
+`npm run setup` asks for these and checks them; this is where each one lives.
 
 | Token | Where | Variable |
 |---|---|---|

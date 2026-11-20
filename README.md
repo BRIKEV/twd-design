@@ -66,6 +66,9 @@ src/
   prototype/
     form-shim.ts           makes forms work in Slack's sandboxed preview
     edits.ts               exact, all-or-nothing edits to the prototype
+  setup/
+    cli.ts                 npm run setup: interactive, writes .env
+    slack.ts               Slack app from the manifest with your branding, token checks
 test/
   flows/                   business stories, end to end: Slack thread → agent → tools → GitHub
   units/                   rules that need their edge cases spelled out (edits, links, shim, App auth)
@@ -88,7 +91,8 @@ brand/                     icon for the Slack app, logo, colors
 
 ## Install (about 15 minutes)
 
-1. [Create the Slack app](docs/setup/slack-app.md) from `slack-manifest.yaml`. *5 min*
+1. [Create the Slack app](docs/setup/slack-app.md): `npm run setup` asks for your app's name and color,
+   gives you a link that creates it, and writes the checked tokens to `.env`. *5 min*
 2. [Create the GitHub App](docs/setup/github-app.md) (optional: design guide and pull requests). *5 min*
 3. [Choose a model](docs/setup/models.md) and get its API key.
 4. Configure and run:

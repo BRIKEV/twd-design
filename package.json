@@ -6,7 +6,8 @@
     "dev": "node --watch --env-file-if-exists=.env src/index.ts",
     "start": "node src/index.ts",
     "typecheck": "tsc --noEmit",
-    "test": "node --test --import ./test/setup.ts --test-force-exit 'test/**/*.test.ts'"
+    "test": "node --test --import ./test/setup.ts --test-force-exit 'test/**/*.test.ts'",
+    "setup": "node src/setup/cli.ts"
   },
   "author": "",
   "license": "MIT",
