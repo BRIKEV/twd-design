@@ -130,17 +130,46 @@ new scenarios in the same style. A small helper like the template's `logIn(user)
 - Query ONLY through Testing Library on `screenDom` (the `#app` screen) or `screenDomGlobal` (dialogs and
   anything outside `#app`): `findByRole(role, { name })` first, then `findByLabelText`, then `findByText`.
   NEVER `querySelector`, class names, ids or `document` in a scenario.
-- Always `await ...findBy*` / `findAllBy*`. Use `queryBy*` only to assert absence:
-  `expect(screenDom.queryByRole('heading', { name: 'X' })).to.equal(null)`.
-- After an action, query again with the expected state in the query (`findByText('3 projects')`):
-  `twd.should` checks once and does not retry.
-- DOM assertions ONLY with `twd.should(el, 'be.visible' | 'have.text' | 'contain.text' | 'have.value' |
-  'be.disabled' | 'be.checked' | 'have.attr' | 'have.class', ...)`. `expect` is plain Chai with no DOM plugin
-  (`expect(el).to.have.value` does not exist); use it only for plain values. Never Jest matchers.
+- Always `await ...findBy*` / `findAllBy*`: they wait up to 3 s for the element. Use `queryBy*` only to
+  assert absence: `expect(screenDom.queryByRole('heading', { name: 'X' })).to.equal(null)`. `getBy*` only
+  inside `await twd.waitFor(() => ...)`.
+- After an action, put the expected state in the query, so `findBy*` waits for it: `findByText('3 projects')`,
+  `findByRole('switch', { name: 'Email for Comments', checked: true })`. `twd.should` checks once and does
+  not retry; when there is nothing new to find, wrap it: `await twd.waitFor(() => twd.should(el, ...))`.
+- DOM assertions ONLY with `twd.should(el, assertion, ...)`. Each checks exactly this, and takes a `not.`
+  prefix (`'not.be.visible'`):
+
+  | Assertion | Passes when |
+  |---|---|
+  | `'be.visible'` | the element is rendered and not hidden (`x-show` false hides it) |
+  | `'have.text', t` / `'contain.text', t` | its text is exactly / contains `t` |
+  | `'have.value', v` | an `<input>`, `<select>` or `<textarea>` has value `v` |
+  | `'be.checked'` | a native `<input type="checkbox">` or `radio` is checked. NOT for `role="switch"` or other ARIA widgets: use `'have.attr', 'aria-checked', 'true'` |
+  | `'be.disabled'` / `'be.enabled'` | the native `disabled` property |
+  | `'have.attr', name, value` | an attribute, e.g. `aria-checked`, `aria-pressed`, `aria-expanded`, `aria-current` |
+  | `'have.class', c` | avoid: scenarios test behavior, not looks |
+
+  `expect` is plain Chai with no DOM plugin (`expect(el).to.have.value` does not exist); use it only for plain
+  values. Never Jest matchers.
+- Alpine traps, from failures we have seen:
+  - `x-show` hides an element but keeps it in the DOM. `queryByText` still finds it, so "gone" is
+    `twd.should(el, 'not.be.visible')`, never `queryBy… === null`. `queryBy… === null` is only for elements
+    removed with `x-if`. For a message that appears after an action (saved, error, empty state), prefer
+    `findByRole('status' | 'alert')`: role queries skip hidden elements, so it waits until it shows.
+  - Alpine updates the DOM right after the event, not inside it. Never assert an element you already hold
+    right after a click: query again with the new state, or use `twd.waitFor`.
+  - A toggle button needs `role="switch"` and `:aria-checked="value.toString()"`, and is asserted with
+    `'have.attr', 'aria-checked', 'true' | 'false'`.
 - `findBy*` throws when several elements match: rely on the unique accessible names from the Alpine rules.
   `within` is not available.
 - Every name or text a scenario queries must exist exactly in the markup or be produced by `x-text`.
   Check each one before you finish.
+- Scenarios run at a desktop size by default. Only when the agreed behavior differs on mobile (a burger
+  menu, not a narrower layout), declare viewports in the `initTWD` options
+  (`viewports: { mobile: { maxWidth: 767 }, desktop: { minWidth: 768 } }`) and tag that scenario
+  `it('opens the menu', { viewport: 'mobile' }, async () => …)`.
+- Every new version's scenarios run in headless Chrome before it is posted. If some fail you get the
+  failures: fix the scenario when it asserts the wrong thing, fix the page when it doesn't do what was agreed.
 - Jump to a screen with `await twd.visit('#/<route>')` when the flow to reach it isn't what you test.
   Never `twd.visit('/path')`.
 

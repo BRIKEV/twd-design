@@ -46,11 +46,22 @@ describe('Stopping the bot', () => {
     assert.equal(slack.versions(root).length, 2);
   });
 
-  test('In a workspace without agent sessions, an hourglass on the message shows the bot is working', async () => {
+  test('For an app not declared as an agent, Slack shows the older "is working…" status instead', async () => {
     slack.withoutAgentSessions();
     model.willDo(decide.reply('Errors show under the form.'));
+    const before = slack.statuses.length;
 
     await slack.post('U_ANA', 'where do errors show?', { thread: root });
+
+    assert.deepEqual(slack.statuses.slice(before), ['working…', 'cleared']);
+    assert.deepEqual(slack.reactions, []);
+  });
+
+  test('Where Slack offers neither, an hourglass on the message shows the bot is working', async () => {
+    slack.withoutAnyStatus();
+    model.willDo(decide.reply('Errors show under the form.'));
+
+    await slack.post('U_ANA', 'and the success message?', { thread: root });
 
     assert.deepEqual(slack.reactions, ['+hourglass_flowing_sand', '-hourglass_flowing_sand']);
   });

@@ -31,7 +31,11 @@ version in progress: the last one posted is still the current one.
 ## Iterate
 
 Each version is an `.html` file in the thread. Open it to click through the screens and run its TWD
-scenarios. Under the latest version:
+scenarios. Before posting it, the bot runs those scenarios in a headless browser and fixes any that fail,
+so the version says "✅ 4 TWD scenarios pass". If one still fails after two fixes, the version says which
+one, and you can ask the bot to fix it.
+
+Under the latest version:
 
 | Button | What it does |
 |---|---|

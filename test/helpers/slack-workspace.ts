@@ -46,6 +46,7 @@ export function slackWorkspace(net: FakeNet) {
   let views = 0;
   let clock = 1000;
   let agentSessions = true;
+  let assistantStatus = true;
   let holdNext: Promise<void> | undefined; // armed by holdNextTurn()
   let armed: Promise<void> | undefined; // taken by the next thread read inside a turn
   let failNextRead: string | undefined;
@@ -102,6 +103,17 @@ export function slackWorkspace(net: FakeNet) {
           if (!agentSessions) throw new Error('An API error occurred: feature_disabled');
           statuses.push(status);
           if (status === 'processing') workingStarted();
+          return { ok: true };
+        },
+      },
+    },
+    assistant: {
+      threads: {
+        // The older "is working…" status, for apps that aren't declared as agents.
+        setStatus: async ({ status }: any) => {
+          if (!assistantStatus) throw new Error('An API error occurred: method_not_supported_for_channel_type');
+          statuses.push(status === '' ? 'cleared' : 'working…');
+          if (status) workingStarted();
           return { ok: true };
         },
       },
@@ -190,8 +202,10 @@ export function slackWorkspace(net: FakeNet) {
     openHome: (user: string) => onHomeOpened({ event: { user, tab: 'home' }, client }),
     /** Someone clicks Slack's own Stop button while the bot works on this thread. */
     stop: (user: string, root: Message) => onStop({ event: { channel: CHANNEL, thread_ts: root.thread_ts, user } }),
-    /** A workspace where agent sessions are not available: the bot falls back to a reaction. */
+    /** An app not declared as an agent: Slack refuses agent sessions, so the bot uses the older status. */
     withoutAgentSessions: () => { agentSessions = false; },
+    /** Neither status is available: the bot falls back to an hourglass reaction. */
+    withoutAnyStatus: () => { agentSessions = false; assistantStatus = false; },
     /** The next turn stalls (a slow model or Slack) until the returned function is called. */
     holdNextTurn: () => { let release!: () => void; holdNext = new Promise((r) => { release = r; }); return () => release(); },
     failNextRead: (error: string) => { failNextRead = error; },

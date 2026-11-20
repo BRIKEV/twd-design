@@ -23,6 +23,8 @@ design  (TWD Design)  →  build  (twd-js + twd-ai)  →  CI  (twd-cli)  →  re
   [What your team sees](docs/guides/working-in-slack.md).
 - **Iterate in the thread.** Reply "and on mobile?" and the bot posts a new version that keeps what was agreed.
 - **Uses your design.** Paste a GitHub repo link and it designs with that repo's `design/DESIGN.md`.
+- **Scenarios that really pass.** Before a version is posted, its TWD scenarios run in headless Chrome;
+  failures go back to the model to fix, so the thread only sees versions whose scenarios pass.
 - **Speaks to developers.** Real routes and proposed endpoints live in `DEV:` comments; prototype-only
   scaffolding is marked `PROTOTYPE ONLY`.
 - **Ships as a PR.** Click Approve (or say so) and it commits `design/prototypes/<feature>/index.html`
@@ -72,6 +74,7 @@ src/
   prototype/
     form-shim.ts           makes forms work in Slack's sandboxed preview
     edits.ts               exact, all-or-nothing edits to the prototype
+    scenarios.ts           runs a prototype's TWD scenarios in headless Chrome, like twd-cli
   setup/
     cli.ts                 npm run setup: interactive, writes .env
     slack.ts               Slack app from the manifest with your branding, token checks
@@ -88,7 +91,7 @@ docs/
   setup/                   Slack app, GitHub App, model
   install/                 Docker, Docker Compose, Render
   reference/               configuration, security, observability, troubleshooting
-Dockerfile                 the image (node 24 slim, non-root, /healthz)
+Dockerfile                 the image (node 24 slim + Chromium for the scenarios, non-root, /healthz)
 docker-compose.yml         run it on any server
 render.yaml                Render blueprint (same Dockerfile)
 slack-manifest.yaml        Slack app manifest (annotated: what to change, what to keep)

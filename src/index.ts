@@ -1,6 +1,7 @@
 import { config, configErrors, socketMode } from './config.ts';
 import { errorFields, log } from './log.ts';
 import { createSlackApp } from './slack/app.ts';
+import { closeBrowser } from './prototype/scenarios.ts';
 import { drainTurns } from './slack/turn.ts';
 
 const errors = configErrors();
@@ -28,6 +29,7 @@ log.info('ready', {
   port: config.port,
   model: config.model.id,
   github: config.github.enabled,
+  scenarioCheck: config.scenarioCheck,
 });
 
 // Graceful shutdown: stop taking turns, let running ones finish, then exit.
@@ -40,6 +42,7 @@ for (const signal of ['SIGTERM', 'SIGINT'] as const) {
     const unfinished = await drainTurns(config.shutdownTimeoutMs);
     if (unfinished) log.warn('exiting with turns still running', { unfinished });
     await app.stop().catch(() => {});
+    await closeBrowser();
     process.exit(0);
   });
 }

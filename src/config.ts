@@ -24,6 +24,9 @@ export const config = {
     enabled: Boolean(env.GITHUB_APP_ID && env.GITHUB_PRIVATE_KEY),
   },
   maxTurnsPerThread: Number(env.MAX_TURNS_PER_THREAD ?? 15),
+  // Run each new version's TWD scenarios in headless Chrome and let the model fix failures before
+  // posting. On unless SCENARIO_CHECK=off.
+  scenarioCheck: env.SCENARIO_CHECK !== 'off',
   // On SIGTERM, how long to wait for running turns before exiting.
   shutdownTimeoutMs: Number(env.SHUTDOWN_TIMEOUT_MS ?? 60_000),
 };

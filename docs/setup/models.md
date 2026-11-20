@@ -59,6 +59,8 @@ Measured with `zai/glm-5.3-flash`, thinking off:
 | Open the pull request | ~29k tokens | ~0.7k tokens | ~20 s |
 
 A typical thread (a first version, two changes and the PR) is about **110k input and 8k output tokens**.
+When a version's scenarios fail in the headless check, each fix round adds about one small change
+(25–30k input, 0.5–1.5k output).
 Input is dominated by the instructions and template (~6k), the design guide (~3–4k) and the current
 prototype, which is sent on every turn.
 

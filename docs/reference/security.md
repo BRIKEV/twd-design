@@ -82,6 +82,10 @@ of them is a restart with the new value.
 | Outbound | `slack.com`, `wss://*.slack.com` | Slack API and Socket Mode |
 | Outbound | `api.github.com` | Design guide and pull requests (optional) |
 | Outbound | Your model provider's API | The model |
+| Outbound | `cdn.jsdelivr.net` | The headless browser that runs each version's scenarios loads Alpine.js, Tailwind and TWD, like a person opening the prototype (`SCENARIO_CHECK=off` skips it) |
 | Inbound | None in Socket Mode | HTTP mode: Slack → `POST /slack/events` |
 
 People who open a prototype load Alpine.js, Tailwind and TWD from `cdn.jsdelivr.net` in their browser.
+
+The scenarios run in a headless Chromium inside the bot's container, on a page served from
+`127.0.0.1` that exists only while they run. Prototypes carry only fake data and make no other requests.

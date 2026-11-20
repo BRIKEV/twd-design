@@ -15,4 +15,6 @@ Object.assign(process.env, {
   GITHUB_PRIVATE_KEY: pem.replace(/\n/g, ' '),
   TEST_GITHUB_PUBLIC_KEY: publicKey.export({ type: 'spki', format: 'pem' }).toString(),
   LOG_LEVEL: 'error',
+  // Stories that need it plug in a fake: npm test never starts a browser.
+  SCENARIO_CHECK: 'off',
 });

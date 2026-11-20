@@ -32,14 +32,22 @@ export function stopTurn(channel: string, threadTs: string, user: string) {
 type Turn = { client: WebClient; botUserId: string; channel: string; threadTs: string; messageTs: string };
 
 /**
- * Slack's own "working…" indicator, with its Stop button. Workspaces without agent sessions get an
- * hourglass on the message instead.
+ * Shows that the bot is working, with the best Slack offers:
+ * 1. agent sessions: Slack's indicator with its Stop button (apps declared as agents);
+ * 2. the older assistant status, "is working…" under the thread;
+ * 3. an hourglass reaction on the message.
  */
 async function showWorking(client: WebClient, channel: string, threadTs: string, messageTs: string) {
-  const status = (s: 'processing' | 'active') => client.agents.sessions.setStatus({ channel_id: channel, thread_ts: threadTs, status: s });
+  const session = (s: 'processing' | 'active') => client.agents.sessions.setStatus({ channel_id: channel, thread_ts: threadTs, status: s });
   try {
-    await status('processing');
-    return () => status('active').catch(() => {});
+    await session('processing');
+    return () => session('active').catch(() => {});
+  } catch { /* not an agent: try the next one */ }
+
+  const status = (s: string) => client.assistant.threads.setStatus({ channel_id: channel, thread_ts: threadTs, status: s });
+  try {
+    await status('is working on it…');
+    return () => status('').catch(() => {});
   } catch {
     const reaction = { channel, timestamp: messageTs, name: 'hourglass_flowing_sand' };
     await client.reactions.add(reaction).catch(() => {});
@@ -123,7 +131,7 @@ export async function handleTurn({ client, botUserId, channel, threadTs, message
       .catch(() => undefined);
 
     const started = Date.now();
-    const { text, usage } = await runDesignAgent(history, state, { design, threadUrl }, stop.signal);
+    const { text, usage, scenarios } = await runDesignAgent(history, state, { design, threadUrl }, stop.signal);
     log.info('turn', {
       thread: key,
       turn: botTurns + 1,
@@ -146,12 +154,17 @@ export async function handleTurn({ client, botUserId, channel, threadTs, message
 
     const reply = text?.trim() || 'Done.';
     if (state.changed && state.html) {
+      const total = scenarios ? scenarios.passed + scenarios.failed.length : 0;
+      const checked = !scenarios ? ''
+        : scenarios.failed.length
+          ? `\n\n_:warning: ${scenarios.failed.length} of ${total} TWD scenarios ${scenarios.failed.length === 1 ? 'fails' : 'fail'}: ${scenarios.failed.map((f) => `"${f.name}"`).join(', ')}. Ask me to fix it._`
+          : `\n\n_:white_check_mark: ${total} TWD scenarios pass in headless Chrome._`;
       await postVersion(client, {
         channel,
         threadTs,
         filename: state.filename,
         html: state.html,
-        comment: reply,
+        comment: reply + checked,
         version: versions.length + 1,
         turn: botTurns + 1,
         repo,
