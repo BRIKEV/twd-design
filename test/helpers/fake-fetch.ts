@@ -12,6 +12,8 @@ export function fakeFetch(initial: Record<string, Handler> = {}) {
 
   globalThis.fetch = (async (input: string | URL | Request, init: RequestInit = {}) => {
     const url = new URL(String(input));
+    // Local servers the code under test starts (e.g. the setup's GitHub callback) are real.
+    if (url.hostname === '127.0.0.1') return original(input, init);
     const method = init.method ?? 'GET';
     const body = typeof init.body === 'string' ? JSON.parse(init.body) : undefined;
     const req = { method, url: url.href, path: url.pathname, headers: new Headers(init.headers), body };

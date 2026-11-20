@@ -69,6 +69,7 @@ src/
   setup/
     cli.ts                 npm run setup: interactive, writes .env
     slack.ts               Slack app from the manifest with your branding, token checks
+    github.ts              GitHub App through the manifest flow, key saved, repo check
 test/
   flows/                   business stories, end to end: Slack thread → agent → tools → GitHub
   units/                   rules that need their edge cases spelled out (edits, links, shim, App auth)
@@ -91,21 +92,22 @@ brand/                     icon for the Slack app, logo, colors
 
 ## Install (about 15 minutes)
 
-1. [Create the Slack app](docs/setup/slack-app.md): `npm run setup` asks for your app's name and color,
-   gives you a link that creates it, and writes the checked tokens to `.env`. *5 min*
-2. [Create the GitHub App](docs/setup/github-app.md) (optional: design guide and pull requests). *5 min*
-3. [Choose a model](docs/setup/models.md) and get its API key.
-4. Configure and run:
+1. Run `npm run setup` from a clone. It creates both apps with your name and color, and writes `.env`:
+   - [the Slack app](docs/setup/slack-app.md): from a link with the manifest filled in, tokens checked against Slack;
+   - [the GitHub App](docs/setup/github-app.md) (optional: design guide and pull requests): created from a
+     manifest in your browser, with the App ID and private key saved for you. *5 min for both*
+2. [Choose a model](docs/setup/models.md) and get its API key.
+3. Configure and run:
 
    ```bash
-   cp .env.example .env     # fill it in: docs/reference/configuration.md
+   # .env from step 1, plus the model key. All variables: docs/reference/configuration.md
    docker compose up -d     # or docker run, or Render
    docker compose logs -f   # wait for {"msg":"ready",...}
    ```
 
    Guides: [Docker](docs/install/docker.md) · [Docker Compose](docs/install/docker-compose.md) · [Render](docs/install/render.md)
 
-5. Invite the bot to a channel (`/invite @twd-design`) and mention it.
+4. Invite the bot to a channel (`/invite @twd-design`) and mention it.
 
 Something not working? [Troubleshooting](docs/reference/troubleshooting.md).
 

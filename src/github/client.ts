@@ -33,11 +33,12 @@ function normalizePem(raw: string) {
   return `-----BEGIN ${m[1]}-----\n${body}\n-----END ${m[1]}-----\n`;
 }
 
-function appJwt() {
+/** A short-lived JWT that authenticates as the App (the configured one, unless others are given). */
+export function appJwt(appId = config.github.appId, privateKey = config.github.privateKey) {
   const b64 = (o: object) => Buffer.from(JSON.stringify(o)).toString('base64url');
   const now = Math.floor(Date.now() / 1000);
-  const unsigned = `${b64({ alg: 'RS256', typ: 'JWT' })}.${b64({ iat: now - 60, exp: now + 540, iss: config.github.appId })}`;
-  const key = normalizePem(config.github.privateKey ?? '');
+  const unsigned = `${b64({ alg: 'RS256', typ: 'JWT' })}.${b64({ iat: now - 60, exp: now + 540, iss: appId })}`;
+  const key = normalizePem(privateKey ?? '');
   return `${unsigned}.${createSign('RSA-SHA256').update(unsigned).sign(key).toString('base64url')}`;
 }
 
@@ -57,9 +58,16 @@ export async function repoToken(repo: string) {
   const cached = tokenCache.get(repo);
   if (cached && cached.expiresAt > Date.now() + 5 * 60_000) return cached.token;
 
-  const jwt = appJwt();
+  const fresh = await installationToken(repo, appJwt());
+  if (!fresh) throw new AppNotInstalledError(repo, await installUrl());
+  tokenCache.set(repo, fresh);
+  return fresh.token;
+}
+
+/** A token scoped to the one repo, or null if the App isn't installed there. */
+export async function installationToken(repo: string, jwt: string) {
   const inst = await gh(`/repos/${repo}/installation`, jwt);
-  if (inst.status === 404) throw new AppNotInstalledError(repo, await installUrl());
+  if (inst.status === 404) return null;
   if (!inst.ok) throw new Error(`GitHub installation lookup failed for ${repo}: ${inst.status}`);
   const { id } = (await inst.json()) as { id: number };
 
@@ -69,6 +77,5 @@ export async function repoToken(repo: string) {
   });
   if (!res.ok) throw new Error(`GitHub token request failed for ${repo}: ${res.status}`);
   const { token, expires_at } = (await res.json()) as { token: string; expires_at: string };
-  tokenCache.set(repo, { token, expiresAt: Date.parse(expires_at) });
-  return token;
+  return { token, expiresAt: Date.parse(expires_at) };
 }

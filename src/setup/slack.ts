@@ -81,4 +81,5 @@ export async function setupSlack({ ask, say, envFile }: Terminal & { envFile: st
   updateEnvFile(envFile, { SLACK_BOT_TOKEN: botToken, SLACK_APP_TOKEN: appToken });
   say(`\n✔ Connected as ${identity}. Saved SLACK_BOT_TOKEN and SLACK_APP_TOKEN to ${envFile}.`);
   say(`  Invite the bot to a channel with /invite @${handle}`);
+  return { name };
 }

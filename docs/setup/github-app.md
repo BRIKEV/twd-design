@@ -14,6 +14,22 @@ With it, the bot:
 Like the Slack app, it is **your own App**: its private key stays in your infrastructure, and you choose
 exactly which repos it can touch. About 5 minutes.
 
+## The quick way
+
+From a clone of the repo:
+
+```bash
+npm run setup -- github
+```
+
+It asks for the organization and the App name, then opens a page that takes you to GitHub with the
+manifest filled in: the right permissions, no webhook. Click **Create GitHub App** and GitHub hands
+the App ID and private key back to the setup, which writes them to `.env`. You never copy a key. Then it
+gives you the install link and checks that the App reaches a repo of your choice and whether it has a
+`DESIGN.md`.
+
+The rest of this page is the same, by hand, and explains every choice.
+
 ## 1. Create the App where your repos live
 
 Create it **in the organization that owns the repos**, not in your personal account: an App created in a
