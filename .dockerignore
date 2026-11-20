@@ -10,3 +10,4 @@ diagnostics
 *.md
 Dockerfile
 docker-compose.yml
+test

@@ -64,6 +64,8 @@ src/
     pull-request.ts        branch + single commit + PR
   prototype/
     form-shim.ts           makes forms work in Slack's sandboxed preview
+    edits.ts               exact, all-or-nothing edits to the prototype
+test/                      deterministic tests, no network (Slack and GitHub are faked)
 diagnostics/
   slack-sandbox-probe.html measures what Slack's preview allows (open it in Slack)
 docs/
@@ -106,7 +108,13 @@ Something not working? [Troubleshooting](docs/reference/troubleshooting.md).
 npm install
 npm run dev        # Node 24+, restarts on code changes
 npm run typecheck
+npm test           # node:test, no network, about 2 seconds
 ```
+
+The tests cover the plumbing that fails silently when it breaks: reading the thread, edits to the
+prototype, the form shim, GitHub App auth, the pull request, and the turn lifecycle (one turn per
+thread, the turn limit, graceful shutdown). The model's output is not tested here: that is the job
+of evals.
 
 ## Operating it
 

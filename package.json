@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "node --watch --env-file-if-exists=.env src/index.ts",
     "start": "node src/index.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "node --test --import ./test/setup.ts --test-force-exit 'test/**/*.test.ts'"
   },
   "author": "",
   "license": "MIT",

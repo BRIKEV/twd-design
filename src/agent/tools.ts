@@ -1,6 +1,7 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { openPullRequest } from '../github/pull-request.ts';
+import { applyEdits } from '../prototype/edits.ts';
 import { ensureFormShim } from '../prototype/form-shim.ts';
 import type { PrototypeState, TurnContext } from './types.ts';
 
@@ -35,18 +36,16 @@ export function prototypeTools(state: PrototypeState, ctx: TurnContext) {
         state.calls.push('edit:no-prototype');
         return { ok: false, error: 'No prototype yet. Use write_prototype.' };
       }
-      let html = state.html;
-      for (const [i, e] of edits.entries()) {
-        const count = html.split(e.old).length - 1;
-        if (count !== 1) {
-          state.calls.push(`edit:miss(${count})`);
-          // All-or-nothing, so the model can retry with a better anchor.
-          return { ok: false, error: `Edit ${i}: old string found ${count} times (must be exactly 1). Nothing applied.` };
-        }
-        html = html.replace(e.old, () => e.new);
+      const result = applyEdits(state.html, edits);
+      if (!result.ok) {
+        state.calls.push(`edit:miss(${result.count})`);
+        return {
+          ok: false,
+          error: `Edit ${result.index}: old string found ${result.count} times (must be exactly 1). Nothing applied.`,
+        };
       }
       state.calls.push(`edit:${edits.length}`);
-      state.html = ensureFormShim(html);
+      state.html = ensureFormShim(result.html);
       state.changed = true;
       return { ok: true, applied: edits.length };
     },
