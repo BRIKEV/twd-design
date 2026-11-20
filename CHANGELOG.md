@@ -7,6 +7,7 @@ All notable changes to this project are documented here. The project follows [Se
 ### Added
 - `npm run setup`: creates the Slack app with your name, handle and color from a one-click link, checks the tokens against Slack and writes them to `.env`. One-click default link in the docs.
 - `npm run setup` creates the GitHub App from a manifest in the browser (right permissions, no webhook), saves the App ID and private key to `.env`, and checks the App reaches a repo and whether it has a `DESIGN.md`.
+- `npm run setup` asks for the model and its API key, explains typos in the model name with close matches, tries the key with one tiny request, and saves both to `.env`.
 - TWD Design branding: name, *Test While Designing* tagline, TWD colors and icon (`brand/`), MIT license.
 - Slack bot that turns requests into single-file HTML prototypes and iterates on them in the thread.
 - Stateless design: the thread is the history, the last attached `.html` is the current version.

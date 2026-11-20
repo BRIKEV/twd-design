@@ -11,7 +11,7 @@ export type Terminal = {
 const MANIFEST = new URL('../../slack-manifest.yaml', import.meta.url);
 
 /** Asks until `check` accepts the answer (it returns an error message otherwise). */
-async function askValid(t: Terminal, question: string, fallback: string | undefined, check: (v: string) => string | null | Promise<string | null>) {
+export async function askValid(t: Terminal, question: string, fallback: string | undefined, check: (v: string) => string | null | Promise<string | null>) {
   for (;;) {
     const value = (await t.ask(question, fallback)).trim();
     const problem = await check(value);

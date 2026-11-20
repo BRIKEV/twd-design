@@ -8,6 +8,19 @@ description: Which LLM provider to use with TWD Design, how to configure it, wha
 TWD Design works with any model the [Mastra model router](https://mastra.ai/models) supports.
 You set two variables: `MODEL` and the provider's API key.
 
+## The quick way
+
+```bash
+npm run setup -- model
+```
+
+It asks for the model (`zai/glm-5.3-flash` by default), tells you which key variable that provider
+uses, tries your key with one tiny request (a few tokens) and saves both to `.env`. A typo in the model
+name or a rejected key is explained there, not in your first thread. `npm run setup` runs this step after
+the Slack and GitHub ones.
+
+## By hand
+
 ```bash
 MODEL=anthropic/<model>
 ANTHROPIC_API_KEY=sk-ant-...

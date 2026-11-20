@@ -31,7 +31,7 @@ export const config = {
 export const socketMode = Boolean(config.slack.appToken);
 
 // The API key variable each model provider reads (Mastra model router).
-const PROVIDER_KEYS: Record<string, string> = {
+export const PROVIDER_KEYS: Record<string, string> = {
   zai: 'ZHIPU_API_KEY',
   'zai-coding-plan': 'ZHIPU_API_KEY',
   anthropic: 'ANTHROPIC_API_KEY',
