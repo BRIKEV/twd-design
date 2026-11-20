@@ -48,7 +48,8 @@ src/
   config.ts                every environment variable, in one place, and its validation
   log.ts                   JSON logs
   slack/
-    app.ts                 Bolt app and event handlers
+    app.ts                 Bolt app wiring and /healthz
+    events.ts              when the bot answers (mentions, follow-ups) and when it stays quiet
     thread.ts              reads the thread: history, current prototype, linked repo
     turn.ts                one bot turn, end to end
   agent/
@@ -65,7 +66,9 @@ src/
   prototype/
     form-shim.ts           makes forms work in Slack's sandboxed preview
     edits.ts               exact, all-or-nothing edits to the prototype
-test/                      deterministic tests, no network (Slack and GitHub are faked)
+test/
+  flows/                   business stories, end to end: Slack thread → agent → tools → GitHub
+  units/                   rules that need their edge cases spelled out (edits, links, shim, App auth)
 diagnostics/
   slack-sandbox-probe.html measures what Slack's preview allows (open it in Slack)
 docs/
@@ -111,10 +114,12 @@ npm run typecheck
 npm test           # node:test, no network, about 2 seconds
 ```
 
-The tests cover the plumbing that fails silently when it breaks: reading the thread, edits to the
-prototype, the form shim, GitHub App auth, the pull request, and the turn lifecycle (one turn per
-thread, the turn limit, graceful shutdown). The model's output is not tested here: that is the job
-of evals.
+Most tests are **stories**: a fake Slack channel where people post, a fake GitHub repo, and a scripted
+model that decides which tools to call. Everything in between is the real code, so a failing test reads
+like a broken promise to the team: *"Ana approves: a PR with the latest version and its intent, linking
+back to the thread"*. No network, about 2 seconds.
+
+The scripted model only replays decisions; whether the real model makes good ones is the job of evals.
 
 ## Operating it
 

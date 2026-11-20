@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { ensureFormShim } from '../src/prototype/form-shim.ts';
+import { ensureFormShim } from '../../src/prototype/form-shim.ts';
 
 const count = (s: string, sub: string) => s.split(sub).length - 1;
 
@@ -34,6 +34,6 @@ test('prepends the shim when there is no <body> tag', () => {
 });
 
 test('the reference template already carries the shim', () => {
-  const template = readFileSync(new URL('../src/agent/template.html', import.meta.url), 'utf8');
+  const template = readFileSync(new URL('../../src/agent/template.html', import.meta.url), 'utf8');
   assert.equal(ensureFormShim(template), template);
 });

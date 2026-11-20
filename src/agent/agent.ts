@@ -1,4 +1,5 @@
 import { Agent } from '@mastra/core/agent';
+import type { MastraModelConfig } from '@mastra/core/llm';
 import { config } from '../config.ts';
 import { loadInstructions } from './instructions.ts';
 import { prototypeTools } from './tools.ts';
@@ -12,13 +13,17 @@ const providerOptions =
     ? { [provider]: { thinking: { type: 'disabled' } } }
     : undefined;
 
+// Always MODEL in production. Tests swap in a scripted model to replay whole conversations.
+let model: MastraModelConfig = config.model.id;
+export const setModel = (m: MastraModelConfig) => { model = m; };
+
 /** Runs one turn: the thread so far + design guide + current prototype in, reply text out. */
 export async function runDesignAgent(history: ChatMessage[], state: PrototypeState, ctx: TurnContext) {
   const agent = new Agent({
     id: 'twd-design',
     name: 'TWD Design',
     instructions: loadInstructions(),
-    model: config.model.id,
+    model,
     tools: prototypeTools(state, ctx),
   });
 

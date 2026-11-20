@@ -1,10 +1,10 @@
 import { test, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { createVerify } from 'node:crypto';
-import { AppNotInstalledError } from '../src/github/client.ts';
-import { readRepoFile } from '../src/github/files.ts';
-import { openPullRequest } from '../src/github/pull-request.ts';
-import { fakeFetch, githubAuth, json } from './helpers/fake-fetch.ts';
+import { AppNotInstalledError } from '../../src/github/client.ts';
+import { readRepoFile } from '../../src/github/files.ts';
+import { openPullRequest } from '../../src/github/pull-request.ts';
+import { fakeFetch, githubAuth, json } from '../helpers/fake-fetch.ts';
 
 let net: ReturnType<typeof fakeFetch>;
 afterEach(() => net?.restore());
@@ -67,33 +67,6 @@ test('App not installed: a typed error carrying the install link', async () => {
   const err = await readRepoFile('acme/nope', 'design/DESIGN.md').catch((e) => e);
   assert.ok(err instanceof AppNotInstalledError);
   assert.equal(err.installUrl, 'https://github.com/apps/acme-design/installations/new');
-});
-
-test('opens a PR: one tree, one commit, a design/ branch, never the default branch', async () => {
-  net = fakeFetch(repoRoutes('acme/pr'));
-  const out = await openPullRequest('acme/pr', pr);
-
-  assert.deepEqual(out, { url: 'https://github.com/acme/pr/pull/7', number: 7, branch: 'design/login' });
-  const body = (call: string) => net.requests.find((r) => `${r.method} ${r.path}` === call)!.body;
-  assert.deepEqual(body('POST /repos/acme/pr/git/trees'), {
-    base_tree: 'tree0',
-    tree: pr.files.map((f) => ({ path: f.path, mode: '100644', type: 'blob', content: f.content })),
-  });
-  assert.deepEqual(body('POST /repos/acme/pr/git/commits'), { message: 'Prototype: login', tree: 'tree1', parents: ['head1'] });
-  assert.deepEqual(body('POST /repos/acme/pr/git/refs'), { ref: 'refs/heads/design/login', sha: 'commit1' });
-  assert.deepEqual(body('POST /repos/acme/pr/pulls'), { title: 'Prototype: login', head: 'design/login', base: 'main', body: 'intent' });
-  assert.ok(!net.requests.some((r) => r.method !== 'GET' && r.path.includes('heads/main')), 'never writes main');
-});
-
-test('an existing branch gets a suffixed one instead of failing', async () => {
-  let refs = 0;
-  net = fakeFetch({
-    ...repoRoutes('acme/again'),
-    'POST /repos/acme/again/git/refs': () => (refs++ === 0 ? json({ message: 'Reference already exists' }, 422) : {}),
-  });
-  const out = await openPullRequest('acme/again', pr);
-  assert.match(out.branch, /^design\/login-[a-z0-9]+$/);
-  assert.equal(net.requests.find((r) => r.path.endsWith('/pulls'))!.body.head, out.branch);
 });
 
 test('a GitHub failure surfaces with its status and message', async () => {

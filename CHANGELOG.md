@@ -14,4 +14,4 @@ All notable changes to this project are documented here. The project follows [Se
 - Form shim injected automatically for Slack's sandboxed preview.
 - Docker image, `docker-compose.yml`, Render blueprint.
 - `/healthz`, configuration validation at startup, JSON logs, graceful shutdown on `SIGTERM`.
-- Deterministic test suite (`npm test`, `node:test`, no network) for the thread, edits, form shim, GitHub App and turn lifecycle; runs in CI.
+- Deterministic test suite (`npm test`, `node:test`, no network): business stories end to end with a fake Slack channel, a fake GitHub repo and a scripted model, plus unit tests for edits, repo links, the form shim and GitHub App auth. Runs in CI.

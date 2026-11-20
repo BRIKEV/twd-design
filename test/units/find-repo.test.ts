@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { findRepo } from '../src/github/files.ts';
+import { findRepo } from '../../src/github/files.ts';
 
 test('reads the Slack link formats', () => {
   assert.equal(findRepo(['look at <https://github.com/acme/web>']), 'acme/web');

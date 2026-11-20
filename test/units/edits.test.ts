@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { applyEdits } from '../src/prototype/edits.ts';
+import { applyEdits } from '../../src/prototype/edits.ts';
 
 const html = '<h1>Projects</h1><button>Add</button><button>Delete</button>';
 

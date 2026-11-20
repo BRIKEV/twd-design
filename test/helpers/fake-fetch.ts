@@ -1,9 +1,12 @@
-// Replaces global fetch with a router, so no test ever reaches GitHub or Slack.
+// Replaces global fetch with a router, so no test ever reaches GitHub, Slack or a model provider.
 
 export type FakeRequest = { method: string; url: string; path: string; headers: Headers; body: any };
 type Handler = (req: FakeRequest) => unknown | Response | Promise<unknown | Response>;
+export type FakeNet = ReturnType<typeof fakeFetch>;
 
-export function fakeFetch(routes: Record<string, Handler>) {
+export function fakeFetch(initial: Record<string, Handler> = {}) {
+  const routes: Record<string, Handler> = { ...initial };
+  const fallbacks: ((req: FakeRequest) => Response | undefined)[] = [];
   const requests: FakeRequest[] = [];
   const original = globalThis.fetch;
 
@@ -14,14 +17,18 @@ export function fakeFetch(routes: Record<string, Handler>) {
     const req = { method, url: url.href, path: url.pathname, headers: new Headers(init.headers), body };
     requests.push(req);
     const handler = routes[`${method} ${url.pathname}`] ?? routes[`${method} ${url.href}`];
-    if (!handler) return json({ message: `no fake for ${method} ${url.pathname}` }, 500);
-    const out = await handler(req);
-    return out instanceof Response ? out : json(out);
+    if (handler) {
+      const out = await handler(req);
+      return out instanceof Response ? out : json(out);
+    }
+    for (const f of fallbacks) { const out = f(req); if (out) return out; }
+    return json({ message: `no fake for ${method} ${url.href}` }, 500);
   }) as typeof fetch;
 
   return {
+    routes,
+    fallbacks,
     requests,
-    calls: () => requests.map((r) => `${r.method} ${r.path}`),
     restore: () => { globalThis.fetch = original; },
   };
 }

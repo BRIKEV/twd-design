@@ -1,0 +1,111 @@
+// The core story: a request in Slack becomes a clickable prototype, the team iterates on it in the
+// thread, and the approved version reaches development as a pull request.
+
+import { describe, test, after } from 'node:test';
+import assert from 'node:assert/strict';
+import { fakeFetch } from '../helpers/fake-fetch.ts';
+import { githubRepo } from '../helpers/github-repo.ts';
+import { decide, scriptedModel } from '../helpers/scripted-model.ts';
+import { slackWorkspace } from '../helpers/slack-workspace.ts';
+import { DESIGN_MD, INTENT, LOGIN_V1 } from './fixtures.ts';
+
+describe('A designer and a PM shape a login screen with the bot and hand it to development', () => {
+  const net = fakeFetch();
+  after(() => net.restore());
+  const slack = slackWorkspace(net);
+  const repo = githubRepo(net, 'acme/web', { files: { 'design/DESIGN.md': DESIGN_MD } });
+  const model = scriptedModel();
+  let thread: Awaited<ReturnType<typeof slack.post>>;
+
+  test('Ana asks for a login screen for acme/web and gets a first version, designed with the team guide', async () => {
+    model.willDo(
+      decide.write('login.html', LOGIN_V1),
+      decide.reply('Here is a first version of the login.\n\nDownload the file to see it at full size.'),
+    );
+
+    thread = await slack.post('U_ANA', slack.mention('a login screen for <https://github.com/acme/web>'));
+
+    assert.ok(model.lastSaw().includes('#e4572e'), 'the bot designed with the DESIGN.md of acme/web');
+    const [v1] = slack.versions(thread);
+    assert.equal(v1.name, 'login.html');
+    assert.match(v1.html, /twd-design:form-shim/, 'the form works in the Slack preview');
+    assert.match(slack.lastReply(thread)!.text!, /first version/);
+    assert.deepEqual(slack.reactions, ['+hourglass_flowing_sand', '-hourglass_flowing_sand'], 'Ana saw the bot working');
+  });
+
+  test('Bruno asks for a change in the thread, without mentioning the bot, and gets v2', async () => {
+    model.willDo(decide.edit({ old: '>Log in<', new: '>Sign in<' }), decide.reply('The button now says Sign in.'));
+    const turnStart = model.calls();
+
+    await slack.post('U_BRUNO', 'the button should say Sign in, like the rest of the app', { thread });
+
+    const seen = model.saw(turnStart);
+    assert.ok(seen.includes('Current prototype (login.html)') && seen.includes('>Log in<'), 'the bot started from v1, read back from the thread');
+    assert.ok(seen.includes('a login screen for') && seen.includes('first version'), 'and with the whole conversation');
+    const versions = slack.versions(thread);
+    assert.equal(versions.length, 2);
+    assert.match(versions[1].html, />Sign in</);
+    assert.doesNotMatch(versions[1].html, />Log in</);
+    assert.equal(versions[1].html.split('twd-design:form-shim').length - 1, 1, 'the shim is not duplicated');
+  });
+
+  test('Bruno asks a question and gets an answer, without a new version', async () => {
+    model.willDo(decide.reply('Errors show under the form, in red.'));
+
+    await slack.post('U_BRUNO', 'where do the errors show?', { thread });
+
+    assert.equal(slack.lastReply(thread)!.text, 'Errors show under the form, in red.');
+    assert.equal(slack.versions(thread).length, 2);
+  });
+
+  test('Ana approves: a PR with the latest version and its intent, linking back to the thread', async () => {
+    model.willDo(
+      decide.openPr('Login Screen', 'Prototype: login', INTENT),
+      decide.reply('Done: https://github.com/acme/web/pull/1'),
+    );
+
+    await slack.post('U_ANA', 'looks good, open the PR', { thread });
+
+    const [pr] = repo.pulls;
+    assert.equal(pr.title, 'Prototype: login');
+    assert.equal(pr.head, 'design/login-screen');
+    assert.equal(pr.base, 'main');
+    assert.deepEqual(pr.basedOn, ['main-sha'], 'branched from the latest main');
+    assert.deepEqual(Object.keys(pr.files), ['design/prototypes/login-screen/index.html', 'design/prototypes/login-screen/intent.md']);
+    assert.equal(pr.files['design/prototypes/login-screen/index.html'], slack.versions(thread)[1].html, 'the PR has v2, the approved one');
+    assert.equal(pr.files['design/prototypes/login-screen/intent.md'], INTENT);
+    assert.ok(pr.body.startsWith(INTENT));
+    assert.ok(pr.body.includes(`https://acme.slack.com/archives/C_DESIGN/p${thread.ts.replace('.', '')}`), 'the PR links to the discussion');
+    assert.equal(model.lastToolResult().url, 'https://github.com/acme/web/pull/1', 'the bot knew the PR link to share it');
+    assert.equal(slack.lastReply(thread)!.text, 'Done: https://github.com/acme/web/pull/1');
+    assert.equal(slack.versions(thread).length, 2, 'approving does not post another version');
+  });
+
+  test('Asked twice in one go, the bot still opens a single PR', async () => {
+    model.willDo(
+      decide.openPr('login-screen', 'Prototype: login', INTENT),
+      decide.openPr('login-screen', 'Prototype: login', INTENT),
+      decide.reply('Already open: https://github.com/acme/web/pull/2'),
+    );
+
+    await slack.post('U_ANA', 'open it again with the final copy', { thread });
+
+    assert.equal(repo.pulls.length, 2, 'one new PR for this request, not two');
+    assert.equal(model.lastToolResult().alreadyOpened, true);
+  });
+
+  test('A later iteration of the same feature gets its own branch instead of clashing', async () => {
+    model.willDo(
+      decide.write('login.html', LOGIN_V1.replace('Log in', 'Continue')),
+      decide.openPr('login-screen', 'Prototype: login v2', INTENT),
+      decide.reply('New PR opened.'),
+    );
+
+    await slack.post('U_ANA', slack.mention('new login, one-step, open the PR straight away <https://github.com/acme/web>'));
+
+    const latest = repo.pulls.at(-1)!;
+    assert.match(latest.head, /^design\/login-screen-[a-z0-9]+$/);
+    assert.match(latest.files['design/prototypes/login-screen/index.html'], />Continue</);
+    assert.equal(model.pending(), 0);
+  });
+});
