@@ -95,6 +95,7 @@ Dockerfile                 the image (node 24 slim + Chromium for the scenarios,
 docker-compose.yml         run it on any server
 render.yaml                Render blueprint (same Dockerfile)
 slack-manifest.yaml        Slack app manifest (annotated: what to change, what to keep)
+site/                      the landing page at design.twd.dev (VitePress, prerendered)
 examples/DESIGN.md         template for your design guide
 brand/                     icon for the Slack app, logo, colors
 .github/workflows/         CI, and image release to GHCR on v* tags
@@ -132,6 +133,9 @@ npm run dev        # Node 24+, restarts on code changes
 npm run typecheck
 npm test           # node:test, no network, about 2 seconds
 ```
+
+The landing page lives in `site/`: `npm run site:dev` to work on it, `npm run site:build` for the static
+files, and `npx wrangler deploy -c site/wrangler.jsonc` to publish it to Cloudflare.
 
 Most tests are **stories**: a fake Slack channel where people post, a fake GitHub repo, and a scripted
 model that decides which tools to call. Everything in between is the real code, so a failing test reads
