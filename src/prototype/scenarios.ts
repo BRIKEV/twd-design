@@ -14,7 +14,13 @@ export type ScenarioReport = { passed: number; failed: ScenarioFailure[]; skippe
 export type ScenarioCheck = (html: string) => Promise<ScenarioReport | { unavailable: string }>;
 
 let browser: Promise<Browser> | undefined;
+// Chrome holds ~150 MB while open. It stays open between versions of a conversation, and closes after
+// a few idle minutes so a small instance (512 MB) only pays for it while people are iterating.
+const IDLE_MS = 3 * 60_000;
+let idleTimer: NodeJS.Timeout | undefined;
+
 async function getBrowser() {
+  clearTimeout(idleTimer);
   browser ??= import('puppeteer').then(({ default: puppeteer }) =>
     puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'] }));
   try {
@@ -100,5 +106,7 @@ export const runScenarios: ScenarioCheck = async (html) => {
   } finally {
     await page.close().catch(() => {});
     server.close();
+    idleTimer = setTimeout(() => void closeBrowser(), IDLE_MS);
+    idleTimer.unref();
   }
 };
