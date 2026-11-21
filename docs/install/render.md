@@ -20,7 +20,8 @@ the old instance stops.
 
 ::: warning Don't use the free plan
 Render's free web services sleep after 15 minutes without HTTP traffic. In Socket Mode no HTTP traffic
-arrives, so the bot would sleep and stop answering. The Blueprint uses the `starter` plan.
+arrives, so the bot would sleep and stop answering. The Blueprint uses the `starter` plan (512 MB),
+which is enough for a team; pick a 1 GB plan if several threads iterate at the same time.
 :::
 
 ## HTTP mode on Render

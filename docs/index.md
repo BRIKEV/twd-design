@@ -27,6 +27,23 @@ feature starts from those scenarios and builds until they pass in the real app.
 | CI | [twd-cli](https://twd.dev/ci-execution) |
 | Review | [twd-relay](https://twd.dev/twd-relay) and [recordings](https://twd.dev/recording) |
 
+## Requirements
+
+| | Minimum | Comfortable |
+|---|---|---|
+| Memory | 512 MB | 1 GB, if several threads iterate at the same time |
+| CPU | 0.5 vCPU | 1 vCPU |
+| Disk | The image, about 390 MB | |
+| Network | Outbound HTTPS to Slack, your model provider, GitHub and `cdn.jsdelivr.net` | No inbound traffic in Socket Mode |
+
+Most of the memory goes to the headless Chrome that runs each version's scenarios: the bot uses about
+150 MB at rest and up to about 350 MB while checking a version. Chrome closes after a few idle minutes.
+`SCENARIO_CHECK=off` skips the check and keeps the bot near 150 MB, but versions are then posted without
+running their scenarios.
+
+No database, no volume, no state: any container platform works (Docker, Compose, Kubernetes, Render,
+Fly.io, Railway, ECS, Cloud Run with min instances 1).
+
 ## Install (about 15 minutes)
 
 1. [Create the Slack app](./setup/slack-app.md) from the manifest. *5 min*

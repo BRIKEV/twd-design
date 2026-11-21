@@ -102,6 +102,9 @@ brand/                     icon for the Slack app, logo, colors
 
 ## Install (about 15 minutes)
 
+Runs anywhere a container runs: 512 MB of memory and 0.5 vCPU are enough ([requirements](docs/index.md#requirements)).
+
+
 1. Run `npm run setup` from a clone. It creates both apps with your name and color, checks your model key, and writes `.env`:
    - [the Slack app](docs/setup/slack-app.md): from a link with the manifest filled in, tokens checked against Slack;
    - [the GitHub App](docs/setup/github-app.md) (optional: design guide and pull requests): created from a
