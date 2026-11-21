@@ -46,26 +46,89 @@ function serve(html: string): Promise<Server> {
 }
 
 type Result = { name: string; status: string; error?: string };
+type Viewport = { minWidth?: number; maxWidth?: number };
 
-// Runs in the page: every scenario TWD registered, with its full "Suite > test" name.
-function runAllInPage(): Promise<Result[]> {
+/** What the page registered: every scenario, and which viewport takes which (twd-js's own answer). */
+export type Registry = {
+  all: string[];
+  names: Record<string, string>;
+  /** Ids twd-js runs at the current width; null when the prototype declares no viewports. */
+  current: string[] | null;
+  named: Record<string, string[]>;
+  viewports: Record<string, Viewport>;
+};
+export type Pass = { viewport: string | null; width: number | null; ids: string[] };
+
+const inRange = ({ minWidth, maxWidth }: Viewport, width: number) =>
+  (minWidth === undefined || width >= minWidth) && (maxWidth === undefined || width <= maxWidth);
+
+/**
+ * twd-js runs only the scenarios that match the window width, so a prototype with a mobile scenario
+ * needs one pass per viewport, each scenario once, the way twd-cli does it: what is in scope at the
+ * base width first, then each remaining viewport at a width inside its range. `unmatched` are
+ * scenarios tagged with a viewport nobody declared: they would never run.
+ */
+export function planPasses(r: Registry, baseWidth: number): { passes: Pass[]; unmatched: string[] } {
+  if (!r.current) return { passes: [{ viewport: null, width: null, ids: r.all }], unmatched: [] };
+  const assigned = new Set<string>();
+  const take = (scope: string[]) => {
+    const ids = r.all.filter((id) => scope.includes(id) && !assigned.has(id));
+    ids.forEach((id) => assigned.add(id));
+    return ids;
+  };
+  const passes: Pass[] = [];
+  const base = take(r.current);
+  if (base.length) passes.push({ viewport: null, width: null, ids: base });
+  for (const [name, vp] of Object.entries(r.viewports)) {
+    const ids = take(r.named[name] ?? []);
+    if (!ids.length) continue;
+    passes.push({ viewport: name, width: inRange(vp, baseWidth) ? baseWidth : (vp.maxWidth ?? vp.minWidth ?? baseWidth), ids });
+  }
+  return { passes, unmatched: r.all.filter((id) => !assigned.has(id)) };
+}
+
+// Runs in the page: the scenarios TWD registered, their full "Suite > test" names, and the viewports.
+function readRegistry(): Registry {
   type Handler = { id: string; name: string; parent?: string; type: string };
-  const w = window as unknown as { __TWD_STATE__?: { handlers: Map<string, Handler> }; __testRunner: any };
+  const w = window as unknown as {
+    __TWD_STATE__?: { handlers: Map<string, Handler> };
+    __TWD_VIEWPORTS__?: { viewports?: Record<string, { minWidth?: number; maxWidth?: number }> };
+    __testRunner: any;
+  };
   const handlers = Array.from(w.__TWD_STATE__?.handlers.values() ?? []);
   const byId = new Map(handlers.map((h) => [h.id, h]));
   const fullName = (h: Handler): string => (h.parent && byId.get(h.parent) ? `${fullName(byId.get(h.parent)!)} > ${h.name}` : h.name);
-  const ids = handlers.filter((h) => h.type === 'test').map((h) => h.id);
+  const tests = handlers.filter((h) => h.type === 'test');
+  const viewports = w.__TWD_VIEWPORTS__?.viewports ?? {};
+  const runner = new w.__testRunner({});
+  const scoped = Object.keys(viewports).length > 0 && typeof runner.viewportScope === 'function';
+  const current: Set<string> | null = scoped ? runner.viewportScope() : null;
+  const named: Record<string, string[]> = {};
+  if (scoped) for (const name of Object.keys(viewports)) named[name] = Array.from(runner.viewportScope({ viewport: name }) ?? []);
+  return {
+    all: tests.map((h) => h.id),
+    names: Object.fromEntries(tests.map((h) => [h.id, fullName(h)])),
+    current: current ? Array.from(current) : null,
+    named,
+    viewports,
+  };
+}
+
+// Runs in the page: the given scenarios, with TWD's own runner.
+function runInPage(ids: string[], names: Record<string, string>): Promise<Result[]> {
   const results: Result[] = [];
-  const runner = new w.__testRunner({
+  const runner = new (window as any).__testRunner({
     onStart: (t: any) => { t.status = 'running'; },
-    onPass: (t: any) => { t.status = 'done'; results.push({ name: fullName(byId.get(t.id)!), status: 'pass' }); },
-    onFail: (t: any, err: Error) => { t.status = 'done'; results.push({ name: fullName(byId.get(t.id)!), status: 'fail', error: err?.message ?? String(err) }); },
-    onSkip: (t: any) => { t.status = 'done'; results.push({ name: fullName(byId.get(t.id)!), status: 'skip' }); },
+    onPass: (t: any) => { t.status = 'done'; results.push({ name: names[t.id], status: 'pass' }); },
+    onFail: (t: any, err: Error) => { t.status = 'done'; results.push({ name: names[t.id], status: 'fail', error: err?.message ?? String(err) }); },
+    onSkip: (t: any) => { t.status = 'done'; results.push({ name: names[t.id], status: 'skip' }); },
   }, { retryCount: 1 });
   return runner.runByIds(ids).then(() => results);
 }
 
-/** Runs every scenario once, at a desktop size. */
+const BASE = { width: 1280, height: 800 };
+
+/** Runs every scenario once: at a desktop size, plus one pass per other viewport the prototype declares. */
 export const runScenarios: ScenarioCheck = async (html) => {
   const started = Date.now();
   let b: Browser;
@@ -80,14 +143,28 @@ export const runScenarios: ScenarioCheck = async (html) => {
   const pageErrors: string[] = [];
   page.on('pageerror', (err) => pageErrors.push((err as Error).message));
   try {
-    await page.setViewport({ width: 1280, height: 800 });
+    await page.setViewport(BASE);
     // No pause between steps: pace is for people watching.
     await page.evaluateOnNewDocument(() => sessionStorage.setItem('twd-pace', '0'));
     const { port } = server.address() as AddressInfo;
     await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: 'load', timeout: 20_000 });
     await page.waitForSelector('#twd-sidebar-root', { timeout: 15_000 });
     const results: Result[] = await Promise.race([
-      page.evaluate(runAllInPage),
+      (async () => {
+        const registry = await page.evaluate(readRegistry);
+        const { passes, unmatched } = planPasses(registry, BASE.width);
+        const out: Result[] = unmatched.map((id) => ({
+          name: registry.names[id],
+          status: 'fail',
+          error: 'Tagged with a viewport that initTWD does not declare, so it never runs. Declare it in viewports or remove the tag.',
+        }));
+        for (const pass of passes) {
+          if (pass.width && pass.width !== BASE.width) await page.setViewport({ ...BASE, width: pass.width });
+          const run = await page.evaluate(runInPage, pass.ids, registry.names);
+          out.push(...run.map((r) => (pass.viewport ? { ...r, name: `${r.name} (${pass.viewport})` } : r)));
+        }
+        return out;
+      })(),
       new Promise<never>((_, reject) => setTimeout(() => reject(new Error('the scenarios took more than 60 s')), 60_000)),
     ]);
     if (!results.length) {

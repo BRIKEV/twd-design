@@ -137,7 +137,7 @@ async function copyInstall() {
                   <p class="who">TWD Design <span class="app">APP</span> <time>10:43</time></p>
                   <p>Here is a first version: three categories with email and push, and quiet hours that only show when they are on.</p>
                   <div class="file"><span class="file-icon">&lt;/&gt;</span><span><b>notification-settings.html</b><small>Opens as a page</small></span></div>
-                  <p class="check">✅ <em>4 TWD scenarios pass in headless Chrome.</em></p>
+                  <p class="check">✅ <em>4 checks pass.</em></p>
                   <div class="buttons" v-if="step < 3"><span class="sbtn go">Approve and open PR</span><span class="sbtn">Pick repo</span></div>
                   <p class="context" v-else><b>v1</b> · replaced by v2</p>
                 </div>
@@ -154,8 +154,8 @@ async function copyInstall() {
                 <img class="avatar" src="/twd-design-icon.png" alt="" width="36" height="36" />
                 <div>
                   <p class="who">TWD Design <span class="app">APP</span> <time>10:47</time></p>
-                  <p>v2: on a phone the buttons stack and everything fits without scrolling sideways. I added a scenario for it.</p>
-                  <p class="check">✅ <em>5 TWD scenarios pass in headless Chrome.</em></p>
+                  <p>v2: on a phone the buttons stack and everything fits without scrolling sideways. I added a check for it.</p>
+                  <p class="check">✅ <em>5 checks pass.</em></p>
                   <div class="buttons" v-if="step < 4"><span class="sbtn go">Approve and open PR</span><span class="sbtn">Back to v1</span></div>
                   <p class="context" v-else>Approved by <b>Sabrina</b></p>
                 </div>
@@ -250,7 +250,7 @@ Short and direct. "Save", not "Submit".</code></pre>
         <article class="reveal">
           <span class="icon" aria-hidden="true">✓</span>
           <h3>"Done", already defined</h3>
-          <p>The acceptance criteria are written as tests that already pass in the prototype. With <a href="https://twd.dev">TWD</a> they run in the real app and in CI too.</p>
+          <p>The acceptance criteria come as automated checks that already pass in the prototype. Developers run the same checks in the real app, and in CI.</p>
         </article>
         <article class="reveal">
           <span class="icon" aria-hidden="true">{ }</span>

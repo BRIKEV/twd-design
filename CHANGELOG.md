@@ -8,6 +8,8 @@ All notable changes to this project are documented here. The project follows [Se
 - Existing Slack apps need the new manifest (interactivity, Home tab, `app_home_opened` and `agent_session_stopped` events). See "Updating an app you created before" in `docs/setup/slack-app.md`.
 
 ### Added
+- Landing page for design.twd.dev in `site/` (VitePress, prerendered): `npm run site:dev`, `npm run site:build`.
+- Prototypes load twd-js 1.14.0. The headless check runs a prototype's scenarios once per viewport it declares, like twd-cli: a `{ viewport: 'mobile' }` scenario runs at a mobile width instead of being skipped at the desktop size, and a scenario tagged with an undeclared viewport is reported as failing.
 - Every new version's TWD scenarios run in headless Chrome before it is posted (pace 0, about 1–3 s). Failures go back to the model to fix, up to two rounds; the version then says how many scenarios pass, or which one still fails. `SCENARIO_CHECK=off` skips it. The Docker image includes Chromium.
 - The model's TWD rules now spell out what each assertion checks, and the Alpine traps behind failing scenarios (`x-show` vs `x-if`, ARIA switches, asserting right after a click).
 - Slack's working indicator falls back to the older assistant status ("is working on it…") for apps not declared as agents, then to the hourglass.
