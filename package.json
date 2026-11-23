@@ -1,6 +1,6 @@
 {
   "name": "twd-design",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Slack bot that turns requests into clickable HTML prototypes with TWD acceptance scenarios, and opens them as pull requests",
   "scripts": {
     "dev": "node --watch --env-file-if-exists=.env src/index.ts",

@@ -22,7 +22,7 @@ Prefer not to clone? Copy just these two files to a folder on your server:
 # docker-compose.yml
 services:
   twd-design:
-    image: ghcr.io/brikev/twd-design:0.1.0
+    image: ghcr.io/brikev/twd-design:0.2.0
     env_file: .env
     restart: unless-stopped
     ports:

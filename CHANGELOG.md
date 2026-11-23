@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The project follows [Se
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-23
+
+Image: `ghcr.io/brikev/twd-design:0.2.0`. Existing Render services built from the Blueprint move to `:0.2` on their next sync.
+
 ### Changed
 - The bot only answers when mentioned, also in threads it is already in. Threads with other bots (an issue
   tracker, CI) or replies between people no longer start a turn. Existing Slack apps can drop the
