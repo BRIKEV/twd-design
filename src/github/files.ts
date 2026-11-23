@@ -41,3 +41,15 @@ export function findIssue(texts: string[], repo: string | null): number | null {
   }
   return found;
 }
+
+export type RepoEntry = { path: string; type: 'file' | 'dir' };
+
+/** The entries of a folder (one level), or null if it doesn't exist. A file path gives null too. */
+export async function listRepoFiles(repo: string, path: string): Promise<RepoEntry[] | null> {
+  const res = await gh(`/repos/${repo}/contents/${path.replace(/^\/+|\/+$/g, '')}`, await repoToken(repo));
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`GitHub list failed for ${repo}/${path}: ${res.status}`);
+  const body = (await res.json()) as { path: string; type: string }[] | object;
+  if (!Array.isArray(body)) return null;
+  return body.map((e) => ({ path: e.path, type: e.type === 'dir' ? 'dir' : 'file' }));
+}

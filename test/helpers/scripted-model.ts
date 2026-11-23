@@ -16,6 +16,8 @@ export const decide = {
   write: (filename: string, html: string): Step => [call('write_prototype', { filename, html })],
   edit: (...edits: { old: string; new: string }[]): Step => [call('edit_prototype', { edits })],
   openPr: (slug: string, title: string, intent: string): Step => [call('open_pull_request', { slug, title, intent })],
+  list: (path: string): Step => [call('list_repo_files', { path })],
+  read: (path: string): Step => [call('read_repo_file', { path })],
   reply: (text: string): Step => [{ type: 'text', text }],
 };
 

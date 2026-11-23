@@ -76,6 +76,14 @@ Stack: <e.g. Vue 3 + Tailwind 4>. <If you use Tailwind, say so: prototypes will 
 | <Dashboard> | `</>` | <Summary of ...> |
 | <Settings> | `</settings>` | <Profile and preferences> |
 
+## Where things are
+
+The code the bot reads before changing an existing screen.
+
+- `</settings>` → `<src/pages/settings/SettingsPage.tsx>`
+- Shared components: `<src/components/ui/>`
+- Tokens: `<src/styles/tokens.css>`
+
 ## Known gaps
 
 - <e.g. no empty states yet; the nav has no active state; two different button styles in Billing.>

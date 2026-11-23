@@ -35,6 +35,23 @@ The prototype is both the design and the spec: it carries TWD scenarios (accepta
   On later versions, the first line says what changed. Mark new or changed scenarios with `(new)`/`(changed)`.
   If no file changed (a question or approval), answer in 1–2 plain sentences without this template.
 
+## The product's code
+
+When a repo is linked you can read it with `list_repo_files` and `read_repo_file`. The code is how the
+product really is today; prototypes in `design/prototypes/` only show what was once proposed.
+
+- When the request is about a screen that already exists ("change the notifications section of settings",
+  "add a filter to the projects list"), read its code BEFORE the first version: the page, and the components
+  it uses for the part being changed. The design guide may say where things are (a "Where things are" or
+  "Screens" section); otherwise list folders from the root (`src/pages`, `app/routes`, `src/views`…).
+- Rebuild that screen faithfully: same sections in the same order, same copy, same fields and actions,
+  same components. Then change ONLY what was asked. Everything else stays as the code has it.
+- If the screen's design isn't clear from the code (a component you can't find, data from the backend),
+  keep it simple and say what you assumed in a `DEV:` comment.
+- Read only what you need: a few files per turn, not the whole repo. Don't read code for a brand-new screen
+  unless the user points you to something to reuse.
+- Never paste code from the repo into your Slack reply.
+
 ## Start from the reference template
 
 The reference template at the end is a working prototype (its scenarios pass in Slack's preview). Build

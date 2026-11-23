@@ -48,7 +48,7 @@ export async function runDesignAgent(history: ChatMessage[], state: PrototypeSta
   });
 
   const messages = [...designMessages(ctx.design, ctx.issue), ...prototypeMessages(state), ...history];
-  const options = { maxSteps: 8, providerOptions, abortSignal };
+  const options = { maxSteps: 16, providerOptions, abortSignal };
   const first = await agent.generate(messages, options);
   const usage = [first.usage];
 

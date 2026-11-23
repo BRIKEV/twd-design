@@ -30,6 +30,11 @@ with two buttons: **Pick repo** (the repos the GitHub App is installed on, and w
 guide) and **Design without a repo** (a neutral look; you can still pick a repo before approving). It asks
 once per thread, and answering with a repo link in words works too.
 
+To change a screen that already exists, say which one and what to change ("only the notifications section
+of settings"). With a repo linked, the bot reads that screen's code first, rebuilds it as it is today and
+changes only what you asked. A [map in the design guide](./design-md.md#where-things-are) helps it find
+the right file.
+
 While it works, Slack shows that the bot is working with a **Stop** button. Stopping throws away the
 version in progress: the last one posted is still the current one.
 

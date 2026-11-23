@@ -53,7 +53,7 @@ Under **Repository permissions**, set exactly these and leave everything else as
 
 | Permission | Access | Why |
 |---|---|---|
-| Contents | Read and write | Read `design/DESIGN.md`. Create the `design/<feature>` branch and its commit. |
+| Contents | Read and write | Read `design/DESIGN.md` and the code of the screens a thread changes. Create the `design/<feature>` branch and its commit. |
 | Pull requests | Read and write | Open the pull request. |
 | Metadata | Read-only | Mandatory for every App. |
 

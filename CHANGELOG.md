@@ -4,6 +4,12 @@ All notable changes to this project are documented here. The project follows [Se
 
 ## [Unreleased]
 
+### Added
+- The bot reads the linked repo's code (`list_repo_files`, `read_repo_file`, read only) before changing a
+  screen that already exists, rebuilds it as it is and changes only what was asked. It skips `.env` files,
+  keys and certificates and reads at most 40 KB per file. A "Where things are" section in `DESIGN.md` tells
+  it where each screen lives; the DESIGN.md guide has a prompt to generate the file with your coding agent.
+
 ## [0.2.0] - 2026-11-23
 
 Image: `ghcr.io/brikev/twd-design:0.2.0`. Existing Render services built from the Blueprint move to `:0.2` on their next sync.

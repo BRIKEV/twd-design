@@ -1,5 +1,6 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
+import { listRepoFiles, readRepoFile } from '../github/files.ts';
 import { openPullRequest } from '../github/pull-request.ts';
 import { applyEdits } from '../prototype/edits.ts';
 import { ensureFormShim } from '../prototype/form-shim.ts';
@@ -105,5 +106,65 @@ export function prototypeTools(state: PrototypeState, ctx: TurnContext) {
     },
   });
 
-  return { write_prototype: writePrototype, edit_prototype: editPrototype, open_pull_request: openPr };
+  const listFiles = createTool({
+    id: 'list_repo_files',
+    description:
+      'List a folder of the linked product repo (one level). Use it to find the code of an existing screen ' +
+      'when the design guide does not say where it is. "" is the repo root.',
+    inputSchema: z.object({ path: z.string().describe('Folder path, e.g. "src/pages"') }),
+    execute: async ({ path }) => {
+      if (!ctx.design?.repo) return noRepo(state, 'list');
+      try {
+        const entries = await listRepoFiles(ctx.design.repo, path);
+        state.calls.push(`list:${path || '/'}`);
+        if (!entries) return { ok: false, error: `Folder not found: ${path}` };
+        return { ok: true, entries: entries.map((e) => (e.type === 'dir' ? `${e.path}/` : e.path)) };
+      } catch (err) {
+        return { ok: false, error: (err as Error).message };
+      }
+    },
+  });
+
+  const readFile = createTool({
+    id: 'read_repo_file',
+    description:
+      'Read a file of the linked product repo. Before changing a screen that already exists, read its code ' +
+      'and the components it uses: the code is how the product really is today.',
+    inputSchema: z.object({ path: z.string().describe('File path, e.g. "src/pages/Settings.tsx"') }),
+    execute: async ({ path }) => {
+      if (!ctx.design?.repo) return noRepo(state, 'read');
+      const clean = path.replace(/^\/+/, '');
+      if (SECRET.test(clean)) {
+        state.calls.push('read:secret');
+        return { ok: false, error: `Not readable: ${clean} may hold secrets.` };
+      }
+      try {
+        const content = await readRepoFile(ctx.design.repo, clean);
+        state.calls.push(`read:${clean}`);
+        if (content == null) return { ok: false, error: `File not found: ${clean}` };
+        if (content.length <= MAX_READ) return { ok: true, content };
+        return { ok: true, content: content.slice(0, MAX_READ), truncated: `Only the first ${MAX_READ} of ${content.length} characters.` };
+      } catch (err) {
+        return { ok: false, error: (err as Error).message };
+      }
+    },
+  });
+
+  return {
+    write_prototype: writePrototype,
+    edit_prototype: editPrototype,
+    open_pull_request: openPr,
+    list_repo_files: listFiles,
+    read_repo_file: readFile,
+  };
+}
+
+/** Per file read: a big page and its components fit, a lockfile or a bundle doesn't flood the model. */
+const MAX_READ = 40_000;
+// Env files, keys and certificates stay out of the model (and so out of Slack).
+const SECRET = /(^|\/)(\.env(\..*)?|.*\.(pem|key|p12|pfx)|id_(rsa|ed25519).*|\.npmrc|credentials(\.json)?)$/i;
+
+function noRepo(state: PrototypeState, what: string) {
+  state.calls.push(`${what}:no-repo`);
+  return { ok: false, error: 'No repo linked in this thread, so there is no code to read. Ask for the GitHub repo link.' };
 }

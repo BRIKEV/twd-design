@@ -66,8 +66,19 @@ export function githubRepo(
   net.fallbacks.push((req) => {
     const prefix = `/repos/${fullName}/contents/`;
     if (req.method !== 'GET' || !req.path.startsWith(prefix)) return undefined;
-    const content = files[decodeURIComponent(req.path.slice(prefix.length))];
-    return content == null ? json({ message: 'Not Found' }, 404) : new Response(content);
+    const path = decodeURIComponent(req.path.slice(prefix.length)).replace(/\/$/, '');
+    const content = files[path];
+    if (content != null) return new Response(content);
+    // A folder: its entries, one level, like GitHub.
+    const inside = Object.keys(files).filter((f) => path === '' || f.startsWith(`${path}/`));
+    if (!inside.length) return json({ message: 'Not Found' }, 404);
+    const entries = new Map<string, string>();
+    for (const f of inside) {
+      const rest = path ? f.slice(path.length + 1) : f;
+      const [name, ...deeper] = rest.split('/');
+      entries.set(name, deeper.length ? 'dir' : 'file');
+    }
+    return json([...entries].map(([name, type]) => ({ name, path: path ? `${path}/${name}` : name, type })));
   });
 
   return { pulls, branches };

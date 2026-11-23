@@ -46,7 +46,10 @@ only sees channels it was invited to and doesn't work in DMs.
 **GitHub**: `contents: write`, `pull_requests: write`, `metadata: read`, only on the repos you select when
 installing the App. See [Create the GitHub App](../setup/github-app.md#_2-permissions).
 
-- It reads one file: `design/DESIGN.md`.
+- It reads `design/DESIGN.md` on every turn, and other files of the linked repo when a request is about a
+  screen that already exists (to rebuild it as it is). It skips `.env` files, keys and certificates, and
+  never puts code in its Slack replies. But anyone who can talk to the bot can ask about a repo the App is
+  installed on, so install it only on repos everyone in those channels may read.
 - It writes only through pull requests: a new `design/<feature>` branch with one commit. It never pushes
   to the default branch, so your branch protection and review rules apply.
 
