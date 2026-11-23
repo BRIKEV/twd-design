@@ -85,7 +85,7 @@ export async function postVersion(client: WebClient, v: NewVersion) {
   await client.chat.postMessage({
     channel: v.channel,
     thread_ts: v.threadTs,
-    text: `v${v.version}: approve it, or reply in the thread to change it`,
+    text: `v${v.version}: approve it, or mention me in the thread to change it`,
     blocks: nextStepsBlocks({ version: v.version, turn: v.turn, maxTurns: config.maxTurnsPerThread, repo: v.repo, github: config.github.enabled }),
     metadata: { event_type: UI, event_payload: { kind: 'next_steps', version: v.version, turn: v.turn } },
   });

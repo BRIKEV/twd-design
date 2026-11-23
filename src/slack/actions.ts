@@ -131,7 +131,7 @@ export async function onViewSubmission({ body, client }: { body: ViewBody; clien
   await client.chat.update({
     channel: meta.channel,
     ts: meta.nextTs,
-    text: `v${meta.version}: approve it, or reply in the thread to change it`,
+    text: `v${meta.version}: approve it, or mention me in the thread to change it`,
     blocks: nextStepsBlocks({ version: meta.version, turn: meta.turn, maxTurns: config.maxTurnsPerThread, repo, github: true }),
   });
 }

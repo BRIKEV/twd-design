@@ -55,6 +55,12 @@ export async function loadThread(
       const html = m.files?.find((f) => f.filetype === 'html' || f.name?.endsWith('.html'));
       if (html) versions.push(html);
       if (m.text) history.push({ role: 'assistant', content: m.text });
+    } else if (m.bot_id && m.ts === threadTs) {
+      // The message that started the thread is its topic, whoever posted it (an issue tracker's
+      // summary, for example). Other apps' replies inside the thread stay out: notifications, not requests.
+      const text = (m.text ?? '').trim();
+      userTexts.push(text);
+      if (text) history.push({ role: 'user', content: `(The message that started this thread, posted by another app)\n${text}` });
     } else if (!m.bot_id) {
       const text = (m.text ?? '').replaceAll(`<@${botUserId}>`, '').trim();
       userTexts.push(text);

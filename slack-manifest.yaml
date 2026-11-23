@@ -36,9 +36,7 @@ settings:
     # HTTP mode only: uncomment and point it to your deployment.
     # request_url: https://twd-design.example.com/slack/events
     bot_events:                                  # KEEP
-      - app_mention                              # a mention starts or continues a thread
-      - message.channels                         # replies in public threads, without mentioning the bot
-      - message.groups                           # same, in private channels
+      - app_mention                              # the bot only answers when mentioned
       - app_home_opened                          # the Home tab: how to use it, prototypes waiting to be built
       - agent_session_stopped                    # the Stop button while the bot works
   interactivity:                                 # KEEP: buttons (approve, back, pick repo, examples) and the repo modal

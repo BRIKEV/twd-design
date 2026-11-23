@@ -21,7 +21,7 @@ describe('Meeting the bot: anyone can tell what it does and try it', () => {
     const welcome = slack.textOf(slack.lastReply(root));
     assert.match(welcome, /clickable HTML prototype/);
     assert.match(welcome, /Ask for a screen/);
-    assert.match(welcome, /reply in the thread/i);
+    assert.match(welcome, /mention me in the thread/i);
     assert.match(welcome, /Approve/);
     assert.deepEqual(slack.buttons(slack.lastReply(root)), ['A login screen', 'A list with filters', 'A 3-step sign-up', 'Notification settings']);
     assert.equal(model.calls(), 0, 'a fixed answer: no model call, no cost');
@@ -47,10 +47,10 @@ describe('Meeting the bot: anyone can tell what it does and try it', () => {
     assert.equal(slack.versions(root).length, 1);
   });
 
-  test('Then she keeps going in the thread, without mentioning the bot', async () => {
+  test('Then she keeps going in the thread, mentioning the bot', async () => {
     model.willDo(decide.edit({ old: '>Log in<', new: '>Sign in<' }), decide.reply('The button now says Sign in.'));
 
-    await slack.post('U_ANA', 'the button should say Sign in', { thread: root });
+    await slack.post('U_ANA', slack.mention('the button should say Sign in'), { thread: root });
 
     assert.equal(slack.versions(root).length, 2);
   });

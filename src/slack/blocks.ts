@@ -9,7 +9,7 @@ const context = (text: string): KnownBlock => ({ type: 'context', elements: [md(
 
 const HOW_IT_WORKS =
   '1. *Ask for a screen* here. Paste the repo link, or pick it later, to use its design guide.\n' +
-  '2. *To change it, reply in the thread*: "and on mobile?", "remove the banner"…\n' +
+  '2. *To change it, mention me in the thread*: "and on mobile?", "remove the banner"…\n' +
   '3. *Approve* it and I open a pull request for developers.';
 
 export const EXAMPLES = [
@@ -40,7 +40,7 @@ export function nextStepsBlocks({ version, turn, maxTurns, repo, github }: NextS
     ...(version > 1 ? [{ type: 'button' as const, action_id: 'twd_back', text: plain(`Back to v${version - 1}`), value: String(version - 1) }] : []),
     ...(github && !repo ? [{ type: 'button' as const, action_id: 'twd_pick_repo', text: plain('Pick repo'), value: 'link' }] : []),
   ];
-  const lines = [`*v${version}* · To change something, reply in the thread · turn ${turn} of ${maxTurns}`];
+  const lines = [`*v${version}* · To change something, mention me in the thread · turn ${turn} of ${maxTurns}`];
   if (github && !repo) lines.push('No repo linked: generic styles. Pick the repo to use its design guide.');
   return [...(buttons.length ? [{ type: 'actions' as const, elements: buttons }] : []), context(lines.join('\n'))];
 }

@@ -25,7 +25,7 @@ describe('When something is missing or fails, the thread says what to do', () =>
     assert.ok(!model.lastSaw().includes('Design guide for this product'));
 
     model.willDo(decide.openPr('signup', 'Prototype: signup', INTENT), decide.reply('Which repo? Paste its GitHub link.'));
-    await slack.post('U_ANA', 'great, open the PR', { thread: chat });
+    await slack.post('U_ANA', slack.mention('great, open the PR'), { thread: chat });
 
     assert.match(model.lastToolResult().error, /paste the GitHub repo link/);
     assert.equal(slack.lastReply(chat)!.text, 'Which repo? Paste its GitHub link.');
@@ -61,12 +61,12 @@ describe('When something is missing or fails, the thread says what to do', () =>
     const chat = await slack.post('U_ANA', slack.mention('a billing page'));
 
     model.willFail('Rate limit exceeded');
-    await slack.post('U_ANA', 'monthly invoices, with download', { thread: chat });
+    await slack.post('U_ANA', slack.mention('monthly invoices, with download'), { thread: chat });
     assert.match(slack.lastReply(chat)!.text!, /^Something failed: .*Rate limit exceeded/);
     assert.equal(slack.statuses.at(-1), 'active', 'the working indicator never stays on');
 
     model.willDo(decide.reply('Here it is.'));
-    await slack.post('U_ANA', 'try again', { thread: chat });
+    await slack.post('U_ANA', slack.mention('try again'), { thread: chat });
     assert.equal(slack.lastReply(chat)!.text, 'Here it is.');
   });
 
@@ -76,8 +76,8 @@ describe('When something is missing or fails, the thread says what to do', () =>
 
     const release = slack.holdNextTurn();
     model.willDo(decide.reply('Added avatars.'));
-    const slowTurn = slack.post('U_ANA', 'add avatars', { thread: chat });
-    await slack.post('U_BRUNO', 'and roles too', { thread: chat });
+    const slowTurn = slack.post('U_ANA', slack.mention('add avatars'), { thread: chat });
+    await slack.post('U_BRUNO', slack.mention('and roles too'), { thread: chat });
     release();
     await slowTurn;
 
@@ -91,11 +91,11 @@ describe('When something is missing or fails, the thread says what to do', () =>
     const chat = await slack.post('U_ANA', slack.mention('a never-ending settings page'));
     for (let i = 1; i < 15; i++) {
       model.willDo(decide.reply('ok'));
-      await slack.post('U_ANA', `change ${i}`, { thread: chat });
+      await slack.post('U_ANA', slack.mention(`change ${i}`), { thread: chat });
     }
     const calls = model.calls();
 
-    await slack.post('U_ANA', 'one more change', { thread: chat });
+    await slack.post('U_ANA', slack.mention('one more change'), { thread: chat });
 
     assert.equal(model.calls(), calls);
     assert.equal(slack.lastReply(chat)!.text, 'This thread hit the 15-turn limit. Start a new thread to keep going.');

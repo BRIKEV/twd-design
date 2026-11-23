@@ -25,7 +25,7 @@ describe('Each version comes with what you can do next', () => {
     const next = slack.lastReply(root);
     assert.deepEqual(slack.buttons(next), ['Approve and open PR']);
     assert.match(slack.textOf(next), /v1/);
-    assert.match(slack.textOf(next), /reply in the thread/i);
+    assert.match(slack.textOf(next), /mention me in the thread/i);
     assert.match(slack.textOf(next), /turn 1 of 15/);
   });
 
@@ -36,7 +36,7 @@ describe('Each version comes with what you can do next', () => {
     const v1Next = slack.lastReply(root)!;
     v1AsBrunoSawIt = structuredClone(v1Next);
 
-    await slack.post('U_BRUNO', 'the button should say Sign in', { thread: root });
+    await slack.post('U_BRUNO', slack.mention('the button should say Sign in'), { thread: root });
 
     assert.deepEqual(slack.buttons(v1Next), []);
     assert.match(slack.textOf(v1Next), /Replaced by v2/);

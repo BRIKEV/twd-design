@@ -1,17 +1,18 @@
 import type { WebClient } from '@slack/web-api';
 import { postPending } from './actions.ts';
 import { welcomeBlocks } from './blocks.ts';
-import { loadThread, UI, type SlackMessage } from './thread.ts';
+import { UI } from './thread.ts';
 import { handleTurn } from './turn.ts';
 
-// When the bot answers. Kept apart from the Bolt wiring so the rules can be read (and tested) on their own.
+// When the bot answers: only when someone mentions it. Threads often have other bots in them (issue
+// trackers, CI), and replies meant for them, or for each other, must not start a turn. Kept apart from
+// the Bolt wiring so the rules can be read (and tested) on their own.
 
 type Ctx = { client: WebClient; context: { retryNum?: number } };
 export type MentionEvent = { channel: string; ts: string; thread_ts?: string; text?: string };
 
 const GREETING = /^(help|ayuda|hi|hello|hey|hola)?[\s!.?¡¿]*$/i;
 const PENDING = /^(pending|pendientes)[\s!.?]*$/i;
-export type MessageEvent = SlackMessage & { channel: string; thread_ts?: string; subtype?: string };
 
 /** A mention starts a thread or continues one. */
 export async function onMention({ event, client, context }: Ctx & { event: MentionEvent }, botUserId: string) {
@@ -25,7 +26,7 @@ export async function onMention({ event, client, context }: Ctx & { event: Menti
     await client.chat.postMessage({
       channel: event.channel,
       thread_ts: threadTs,
-      text: 'I turn a request into a clickable HTML prototype. Ask for a screen, reply in the thread to change it, approve it to open a PR.',
+      text: 'I turn a request into a clickable HTML prototype. Ask for a screen, mention me in the thread to change it, approve it to open a PR.',
       blocks: welcomeBlocks(),
       metadata: { event_type: UI, event_payload: { kind: 'welcome' } },
     });
@@ -36,14 +37,4 @@ export async function onMention({ event, client, context }: Ctx & { event: Menti
     return;
   }
   await handleTurn({ client, botUserId, channel: event.channel, threadTs, messageTs: event.ts });
-}
-
-/** A reply in a thread the bot is already in needs no mention: that's the ping-pong. */
-export async function onMessage({ message: m, client, context }: Ctx & { message: MessageEvent }, botUserId: string) {
-  if (context.retryNum) return;
-  // Edits, deletions, joins… and other bots (including this one) are not requests.
-  if (m.subtype || m.bot_id || m.user === botUserId || !m.thread_ts || !m.ts) return;
-  if (m.text?.includes(`<@${botUserId}>`)) return; // onMention handles it
-  const { botInThread } = await loadThread(client, botUserId, m.channel, m.thread_ts, { withHtml: false });
-  if (botInThread) await handleTurn({ client, botUserId, channel: m.channel, threadTs: m.thread_ts, messageTs: m.ts });
 }

@@ -40,7 +40,7 @@ describe('Setting up the Slack app', () => {
     assert.match(manifest, /^    display_name: "acme-design"$/m);
     assert.match(manifest, /^  background_color: "#e4572e"$/m);
     assert.match(manifest, /Acme Design answers with a clickable HTML prototype/);
-    for (const kept of ['app_mentions:read', 'files:read', 'reactions:write', 'message.channels', 'socket_mode_enabled: true']) {
+    for (const kept of ['app_mentions:read', 'files:read', 'reactions:write', 'app_mention', 'socket_mode_enabled: true']) {
       assert.ok(manifest.includes(kept), `keeps ${kept}`);
     }
     assert.ok(!manifest.includes('# CHANGE'), 'the editing notes stay in the repo file, not in her app');

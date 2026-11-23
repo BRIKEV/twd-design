@@ -30,14 +30,37 @@ describe('When the bot answers, and when it stays quiet', () => {
     assert.equal(slack.botReplies(chat).length, 1);
   });
 
-  test('Once in a thread, it follows the conversation without being mentioned again', async () => {
+  test('In a thread, it answers only when mentioned: people talking to each other (or to another bot) are left alone', async () => {
     model.willDo(decide.reply('What should the empty state say?'));
     const chat = await slack.post('U_ANA', slack.mention('an empty state for projects'));
-    model.willDo(decide.reply('Got it.'));
 
+    await slack.post('U_BRUNO', '@DEVNeptuno add this to the issue', { thread: chat });
     await slack.post('U_ANA', 'something friendly, with a button to create one', { thread: chat });
 
+    assert.equal(slack.botReplies(chat).length, 1, 'no answer without a mention');
+  });
+
+  test('Mentioned again, it answers with the whole conversation, the unmentioned replies included', async () => {
+    model.willDo(decide.reply('What should the empty state say?'));
+    const chat = await slack.post('U_ANA', slack.mention('an empty state for projects'));
+    await slack.post('U_ANA', 'something friendly, with a button to create one', { thread: chat });
+    model.willDo(decide.reply('Got it.'));
+
+    await slack.post('U_ANA', slack.mention('go ahead'), { thread: chat });
+
     assert.equal(slack.botReplies(chat).length, 2);
+    assert.ok(model.lastSaw().includes('something friendly, with a button to create one'));
+  });
+
+  test('The message that started the thread is context, even when another app posted it', async () => {
+    const issue = await slack.post('U_NEPTUNO', 'Thanks for your idea: a My karma page (#71). Is that right?', { botId: 'B_NEPTUNO' });
+    await slack.post('U_GITHUB', 'Deploy failed on staging', { thread: issue, botId: 'B_GITHUB' });
+    model.willDo(decide.reply('Sure.'));
+
+    await slack.post('U_KEVIN', slack.mention('prototypes for these use cases please'), { thread: issue });
+
+    assert.ok(model.lastSaw().includes('a My karma page (#71)'), 'the thread\'s topic reached the model');
+    assert.ok(!model.lastSaw().includes('Deploy failed'), 'other apps\' replies inside the thread did not');
   });
 
   test('Edited messages, other bots and Slack retries never start a turn', async () => {
@@ -59,7 +82,7 @@ describe('When the bot answers, and when it stays quiet', () => {
     await slack.post('U_GITHUB', 'Deploy failed on staging', { thread: chat, botId: 'B_GITHUB' });
     model.willDo(decide.reply('Three steps then.'));
 
-    await slack.post('U_ANA', 'three steps max', { thread: chat });
+    await slack.post('U_ANA', slack.mention('three steps max'), { thread: chat });
 
     assert.ok(model.lastSaw().includes('three steps max'));
     assert.ok(!model.lastSaw().includes('Deploy failed'), 'the GitHub notification never reached the model');

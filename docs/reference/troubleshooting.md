@@ -30,11 +30,11 @@ If it says **"Slack rejected SLACK_BOT_TOKEN"**, the token is wrong or the app w
 
 If the logs show nothing at all when you mention it, Slack isn't delivering the event: it's one of 2, 3 or 5.
 
-## It answers mentions but not replies in the thread
+## It doesn't answer a reply in the thread
 
-Replies without a mention arrive through the `message.channels` (public) and `message.groups` (private)
-events. Check they are in the app's **Event Subscriptions**, then reinstall. The bot only answers replies
-in threads where it has already posted.
+It only answers when mentioned, also in a thread it is already in: `@twd-design and on mobile?`. That keeps
+it out of conversations between people, or with other bots in the same thread. It still reads the replies
+that didn't mention it when it answers.
 
 ## "I can't read owner/repo: the GitHub App isn't installed there"
 

@@ -33,11 +33,11 @@ describe('A designer and a PM shape a login screen with the bot and hand it to d
     assert.deepEqual(slack.statuses, ['processing', 'active'], 'Ana saw the bot working');
   });
 
-  test('Bruno asks for a change in the thread, without mentioning the bot, and gets v2', async () => {
+  test('Bruno mentions the bot in the thread with a change and gets v2', async () => {
     model.willDo(decide.edit({ old: '>Log in<', new: '>Sign in<' }), decide.reply('The button now says Sign in.'));
     const turnStart = model.calls();
 
-    await slack.post('U_BRUNO', 'the button should say Sign in, like the rest of the app', { thread });
+    await slack.post('U_BRUNO', slack.mention('the button should say Sign in, like the rest of the app'), { thread });
 
     const seen = model.saw(turnStart);
     assert.ok(seen.includes('Current prototype (login.html)') && seen.includes('>Log in<'), 'the bot started from v1, read back from the thread');
@@ -52,7 +52,7 @@ describe('A designer and a PM shape a login screen with the bot and hand it to d
   test('Bruno asks a question and gets an answer, without a new version', async () => {
     model.willDo(decide.reply('Errors show under the form, in red.'));
 
-    await slack.post('U_BRUNO', 'where do the errors show?', { thread });
+    await slack.post('U_BRUNO', slack.mention('where do the errors show?'), { thread });
 
     assert.equal(slack.lastReply(thread)!.text, 'Errors show under the form, in red.');
     assert.equal(slack.versions(thread).length, 2);
@@ -64,7 +64,7 @@ describe('A designer and a PM shape a login screen with the bot and hand it to d
       decide.reply('Done: https://github.com/acme/web/pull/1'),
     );
 
-    await slack.post('U_ANA', 'looks good, open the PR', { thread });
+    await slack.post('U_ANA', slack.mention('looks good, open the PR'), { thread });
 
     const [pr] = repo.pulls;
     assert.equal(pr.title, 'Prototype: login');
@@ -88,7 +88,7 @@ describe('A designer and a PM shape a login screen with the bot and hand it to d
       decide.reply('Already open: https://github.com/acme/web/pull/2'),
     );
 
-    await slack.post('U_ANA', 'open it again with the final copy', { thread });
+    await slack.post('U_ANA', slack.mention('open it again with the final copy'), { thread });
 
     assert.equal(repo.pulls.length, 2, 'one new PR for this request, not two');
     assert.equal(model.lastToolResult().alreadyOpened, true);

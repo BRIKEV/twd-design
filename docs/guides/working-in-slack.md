@@ -43,8 +43,10 @@ Under the latest version:
 | **Back to vN** | Posts the previous version again as a new one. No model call. |
 | **Pick repo** | Lists the repos where the GitHub App is installed, and which ones have a design guide. Shown until a repo is linked. |
 
-To change anything, reply in the thread: "and on mobile?", "remove the banner", "the button should say
-Sign in". There is no need to mention the bot again in a thread it is already in.
+To change anything, mention the bot in the thread: "@twd-design and on mobile?", "@twd-design remove the
+banner". It only answers when mentioned, so the team (and other bots, like an issue tracker) can talk in the
+same thread without starting a turn. When it answers, it reads the whole thread, the replies that didn't
+mention it included, and the message that started the thread even if another app posted it.
 
 Only the latest version has buttons. When a new one arrives, the previous one shows "Replaced by vN".
 

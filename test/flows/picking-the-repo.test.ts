@@ -47,7 +47,7 @@ describe('Picking the repo from a list', () => {
 
     model.willDo(decide.edit({ old: '>Log in<', new: '>Sign in<' }), decide.reply('v2 with your design guide.'));
     const turnStart = model.calls();
-    await slack.post('U_BRUNO', 'redo it with our guide', { thread: root });
+    await slack.post('U_BRUNO', slack.mention('redo it with our guide'), { thread: root });
     assert.ok(model.saw(turnStart).includes('#e4572e'), 'designed with the DESIGN.md of acme/web');
   });
 

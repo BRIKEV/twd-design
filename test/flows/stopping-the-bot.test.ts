@@ -28,7 +28,7 @@ describe('Stopping the bot', () => {
     model.willHang();
     const calls = model.calls();
 
-    const turn = slack.post('U_BRUNO', 'make everything purple', { thread: root });
+    const turn = slack.post('U_BRUNO', slack.mention('make everything purple'), { thread: root });
     await model.waitForCalls(calls + 1);
     await slack.stop('U_BRUNO', root);
     await turn;
@@ -41,7 +41,7 @@ describe('Stopping the bot', () => {
   test('The thread is free right away: the next request works', async () => {
     model.willDo(decide.edit({ old: '>Log in<', new: '>Sign in<' }), decide.reply('The button now says Sign in.'));
 
-    await slack.post('U_BRUNO', 'just change the button to Sign in', { thread: root });
+    await slack.post('U_BRUNO', slack.mention('just change the button to Sign in'), { thread: root });
 
     assert.equal(slack.versions(root).length, 2);
   });
@@ -51,7 +51,7 @@ describe('Stopping the bot', () => {
     model.willDo(decide.reply('Errors show under the form.'));
     const before = slack.statuses.length;
 
-    await slack.post('U_ANA', 'where do errors show?', { thread: root });
+    await slack.post('U_ANA', slack.mention('where do errors show?'), { thread: root });
 
     assert.deepEqual(slack.statuses.slice(before), ['working…', 'cleared']);
     assert.deepEqual(slack.reactions, []);
@@ -61,7 +61,7 @@ describe('Stopping the bot', () => {
     slack.withoutAnyStatus();
     model.willDo(decide.reply('Errors show under the form.'));
 
-    await slack.post('U_ANA', 'and the success message?', { thread: root });
+    await slack.post('U_ANA', slack.mention('and the success message?'), { thread: root });
 
     assert.deepEqual(slack.reactions, ['+hourglass_flowing_sand', '-hourglass_flowing_sand']);
   });

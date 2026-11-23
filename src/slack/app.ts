@@ -2,13 +2,13 @@ import bolt from '@slack/bolt';
 import { config, socketMode } from '../config.ts';
 import { boltLogger } from '../log.ts';
 import { onAction, onHomeOpened, onStop, onViewSubmission, type ActionBody, type ViewBody } from './actions.ts';
-import { onMention, onMessage, type MessageEvent } from './events.ts';
+import { onMention } from './events.ts';
 import { isAccepting } from './turn.ts';
 
 const { App } = bolt;
 
 /**
- * The Bolt app. Conversation (events.ts): mentions, and replies in threads the bot is already in.
+ * The Bolt app. Conversation (events.ts): mentions only.
  * Buttons, the repo modal, Slack's Stop button and the Home tab (actions.ts).
  */
 export function createSlackApp(getBotUserId: () => string) {
@@ -34,8 +34,6 @@ export function createSlackApp(getBotUserId: () => string) {
   });
 
   app.event('app_mention', ({ event, client, context }) => onMention({ event, client, context }, getBotUserId()));
-  app.message(({ message, client, context }) =>
-    onMessage({ message: message as MessageEvent, client, context }, getBotUserId()));
 
   // Slack wants every click and submit acknowledged within 3 seconds; the work happens after.
   app.action(/^twd_/, async ({ ack, body, client }) => {

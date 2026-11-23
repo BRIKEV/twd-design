@@ -1,6 +1,6 @@
 import type { WebClient } from '@slack/web-api';
 import { onAction, onHomeOpened, onStop, onViewSubmission } from '../../src/slack/actions.ts';
-import { onMention, onMessage } from '../../src/slack/events.ts';
+import { onMention } from '../../src/slack/events.ts';
 import type { SlackMessage } from '../../src/slack/thread.ts';
 import type { FakeNet } from './fake-fetch.ts';
 
@@ -133,13 +133,12 @@ export function slackWorkspace(net: FakeNet) {
     },
   } as unknown as WebClient;
 
-  /** Someone posts. Slack delivers it to the bot as app_mention (if it mentions the bot) and as a message. */
+  /** Someone posts. The bot only hears it as app_mention, when it mentions the bot. */
   async function post(user: string, text: string, { thread, retry = 0, subtype, botId }: { thread?: Message; retry?: number; subtype?: string; botId?: string } = {}) {
     const msg = append(thread?.thread_ts ?? '', { user, text, bot_id: botId });
     const context = { retryNum: retry || undefined };
     const event = { ...msg, channel: CHANNEL, thread_ts: thread ? msg.thread_ts : undefined, subtype };
     if (text.includes(`<@${BOT}>`)) await onMention({ event, client, context }, BOT);
-    await onMessage({ message: event, client, context }, BOT);
     return msg;
   }
 
