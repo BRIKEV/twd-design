@@ -19,16 +19,10 @@ describe('When something is missing or fails, the thread says what to do', () =>
   githubRepo(net, 'acme/locked', { files: { 'design/DESIGN.md': '# Design' } });
   net.routes['POST /repos/acme/locked/pulls'] = () => json({ message: 'Resource not accessible by integration' }, 403);
 
-  test('Without a linked repo, it designs with neutral defaults and asks for the repo before a PR', async () => {
+  test('Without a linked repo, it designs with neutral defaults', async () => {
     model.willDo(decide.write('signup.html', LOGIN_V1), decide.reply('Here is a signup with neutral styles.'));
-    const chat = await slack.post('U_ANA', slack.mention('a signup page'));
+    await slack.post('U_ANA', slack.mention('a signup page'));
     assert.ok(!model.lastSaw().includes('Design guide for this product'));
-
-    model.willDo(decide.openPr('signup', 'Prototype: signup', INTENT), decide.reply('Which repo? Paste its GitHub link.'));
-    await slack.post('U_ANA', slack.mention('great, open the PR'), { thread: chat });
-
-    assert.match(model.lastToolResult().error, /paste the GitHub repo link/);
-    assert.equal(slack.lastReply(chat)!.text, 'Which repo? Paste its GitHub link.');
   });
 
   test('A repo without DESIGN.md: the bot is told so, to design neutral and say it', async () => {
@@ -47,12 +41,13 @@ describe('When something is missing or fails, the thread says what to do', () =>
   });
 
   test('GitHub refuses the PR: the bot gets the reason and can explain it', async () => {
+    model.willDo(decide.write('login.html', LOGIN_V1), decide.reply('First version.'));
+    const chat = await slack.post('U_ANA', slack.mention('a login for <https://github.com/acme/locked>'));
     model.willDo(
-      decide.write('login.html', LOGIN_V1),
       decide.openPr('login', 'Prototype: login', INTENT),
       decide.reply('GitHub refused the PR: the App lacks write access to acme/locked.'),
     );
-    await slack.post('U_ANA', slack.mention('login and open the PR on <https://github.com/acme/locked>'));
+    await slack.click('U_ANA', slack.controls(chat)!, 'Approve and open PR');
     assert.match(model.lastToolResult().error, /403 .*Resource not accessible/);
   });
 

@@ -99,7 +99,7 @@ type Approval = { channel: string; threadTs: string; nextTs: string; version: nu
 async function approve(client: WebClient, botUserId: string, a: Approval) {
   await client.chat.update({ channel: a.channel, ts: a.nextTs, text: `v${a.version}: approved`, blocks: approvedBlocks(a.version, a.user) });
   const ts = await sayFor(client, a.user, a.channel, a.threadTs, `Approved v${a.version}. Open the pull request.`);
-  await handleTurn({ client, botUserId, channel: a.channel, threadTs: a.threadTs, messageTs: ts });
+  await handleTurn({ client, botUserId, channel: a.channel, threadTs: a.threadTs, messageTs: ts, approved: true });
 }
 
 /** Slack wants the modal open within 3 seconds of the click: open it loading, then list the repos. */

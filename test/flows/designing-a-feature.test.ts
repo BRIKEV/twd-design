@@ -58,13 +58,25 @@ describe('A designer and a PM shape a login screen with the bot and hand it to d
     assert.equal(slack.versions(thread).length, 2);
   });
 
-  test('Ana approves: a PR with the latest version and its intent, linking back to the thread', async () => {
+  test('Asking in words for the PR opens nothing: the bot points to the Approve button', async () => {
+    model.willDo(
+      decide.openPr('login-screen', 'Prototype: login', INTENT),
+      decide.reply('Press Approve and open PR under v2 and I will open it.'),
+    );
+
+    await slack.post('U_ANA', slack.mention('looks good, open the PR'), { thread });
+
+    assert.equal(repo.pulls.length, 0);
+    assert.match(model.lastToolResult().error, /Approve and open PR/);
+  });
+
+  test('Ana clicks Approve: a PR with the latest version and its intent, linking back to the thread', async () => {
     model.willDo(
       decide.openPr('Login Screen', 'Prototype: login', INTENT),
       decide.reply('Done: https://github.com/acme/web/pull/1'),
     );
 
-    await slack.post('U_ANA', slack.mention('looks good, open the PR'), { thread });
+    await slack.click('U_ANA', slack.controls(thread)!, 'Approve and open PR');
 
     const [pr] = repo.pulls;
     assert.equal(pr.title, 'Prototype: login');
@@ -81,27 +93,19 @@ describe('A designer and a PM shape a login screen with the bot and hand it to d
     assert.equal(slack.versions(thread).length, 2, 'approving does not post another version');
   });
 
-  test('Asked twice in one go, the bot still opens a single PR', async () => {
+  test('A later iteration of the same feature gets its own branch, and one PR even if the model asks twice', async () => {
+    model.willDo(decide.write('login.html', LOGIN_V1.replace('Log in', 'Continue')), decide.reply('One-step login.'));
+    const again = await slack.post('U_ANA', slack.mention('new login, one-step <https://github.com/acme/web>'));
     model.willDo(
-      decide.openPr('login-screen', 'Prototype: login', INTENT),
-      decide.openPr('login-screen', 'Prototype: login', INTENT),
-      decide.reply('Already open: https://github.com/acme/web/pull/2'),
-    );
-
-    await slack.post('U_ANA', slack.mention('open it again with the final copy'), { thread });
-
-    assert.equal(repo.pulls.length, 2, 'one new PR for this request, not two');
-    assert.equal(model.lastToolResult().alreadyOpened, true);
-  });
-
-  test('A later iteration of the same feature gets its own branch instead of clashing', async () => {
-    model.willDo(
-      decide.write('login.html', LOGIN_V1.replace('Log in', 'Continue')),
+      decide.openPr('login-screen', 'Prototype: login v2', INTENT),
       decide.openPr('login-screen', 'Prototype: login v2', INTENT),
       decide.reply('New PR opened.'),
     );
 
-    await slack.post('U_ANA', slack.mention('new login, one-step, open the PR straight away <https://github.com/acme/web>'));
+    await slack.click('U_ANA', slack.controls(again)!, 'Approve and open PR');
+
+    assert.equal(repo.pulls.length, 2, 'one new PR for this approval, not two');
+    assert.equal(model.lastToolResult().alreadyOpened, true);
 
     const latest = repo.pulls.at(-1)!;
     assert.match(latest.head, /^design\/login-screen-[a-z0-9]+$/);

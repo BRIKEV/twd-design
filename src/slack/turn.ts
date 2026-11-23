@@ -29,7 +29,7 @@ export function stopTurn(channel: string, threadTs: string, user: string) {
   running.get(`${channel}:${threadTs}`)?.abort({ user });
 }
 
-type Turn = { client: WebClient; botUserId: string; channel: string; threadTs: string; messageTs: string };
+type Turn = { client: WebClient; botUserId: string; channel: string; threadTs: string; messageTs: string; approved?: boolean };
 
 /**
  * Shows that the bot is working, with the best Slack offers:
@@ -92,7 +92,7 @@ export async function postVersion(client: WebClient, v: NewVersion) {
 }
 
 /** One bot turn: read the thread, run the agent, post the new version (or the answer) in the thread. */
-export async function handleTurn({ client, botUserId, channel, threadTs, messageTs }: Turn) {
+export async function handleTurn({ client, botUserId, channel, threadTs, messageTs, approved }: Turn) {
   const say = (text: string) => client.chat.postMessage({ channel, thread_ts: threadTs, text });
   const key = `${channel}:${threadTs}`;
   if (!accepting) {
@@ -131,7 +131,7 @@ export async function handleTurn({ client, botUserId, channel, threadTs, message
       .catch(() => undefined);
 
     const started = Date.now();
-    const { text, usage, scenarios } = await runDesignAgent(history, state, { design, threadUrl }, stop.signal);
+    const { text, usage, scenarios } = await runDesignAgent(history, state, { design, threadUrl, approved }, stop.signal);
     log.info('turn', {
       thread: key,
       turn: botTurns + 1,

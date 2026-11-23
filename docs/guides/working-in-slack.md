@@ -56,6 +56,9 @@ Approving opens a pull request with `design/prototypes/<feature>/index.html` and
 (problem, screens, agreed scenarios, notes for developers), linking back to the thread. If no repo is
 linked yet, the bot asks where the PR should go.
 
+Only the button opens a pull request. Asking in words ("ship it", "open the PR") gets a reminder to press
+it, so a sentence the bot misreads can never create a PR.
+
 ## Waiting to be built
 
 An approved prototype is an open pull request until developers build it and merge it. Open the bot's app

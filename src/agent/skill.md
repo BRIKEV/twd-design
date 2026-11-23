@@ -175,11 +175,12 @@ new scenarios in the same style. A small helper like the template's `logIn(user)
 
 ## Opening a pull request
 
-When the user explicitly approves the prototype or asks to save it or open a PR ("approved", "ship it",
-"open the PR", "guárdalo en el repo"), call `open_pull_request`. Never call it on your own initiative,
-and never for "looks good" said in passing while still iterating: if unsure, ask in one line.
+Pull requests are opened with the **Approve and open PR** button under the latest version. Pressing it
+posts "Approved vN. Open the pull request." in the person's name: on that turn, call `open_pull_request`.
 
-- It needs a repo linked in the thread. If there is none, ask for the GitHub link instead of calling it.
+On any other turn, don't call it. If someone asks in words to approve, save or open a PR ("ship it",
+"open the PR", "guárdalo en el repo"), tell them in one line to press **Approve and open PR** under the
+latest version. A request to redo or change the prototype is never an approval, even when it mentions a repo.
 - `slug`: short kebab-case feature name. `title`: `Prototype: <feature>`.
 - `intent`: the `intent.md`, in Markdown, written for the developer who will implement it:
   - `# <Feature>` and one paragraph: the problem and who it's for.

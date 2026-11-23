@@ -188,6 +188,8 @@ export function slackWorkspace(net: FakeNet) {
     thread,
     botReplies,
     lastReply: (root: Message) => botReplies(root).at(-1),
+    /** The bot's latest message with buttons: the controls under the current version. */
+    controls: (root: Message) => botReplies(root).filter((m) => buttonsIn(m.blocks).length).at(-1),
     /** The prototype versions the bot attached to the thread, oldest first. */
     versions: (root: Message) => botReplies(root).filter((m) => m.html).map((m) => ({ name: m.files![0].name!, html: m.html! })),
     /** What a message says, its blocks included. */

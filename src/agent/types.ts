@@ -13,5 +13,8 @@ export type PrototypeState = {
 /** The repo linked in the thread and its design guide (null if the repo has none). */
 export type DesignContext = { repo: string; guide: string | null } | null;
 
-/** What the turn knows beyond the messages: the linked repo and where the thread lives. */
-export type TurnContext = { design: DesignContext; threadUrl?: string };
+/**
+ * What the turn knows beyond the messages: the linked repo, where the thread lives, and whether someone
+ * pressed Approve (the only way a pull request gets opened).
+ */
+export type TurnContext = { design: DesignContext; threadUrl?: string; approved?: boolean };

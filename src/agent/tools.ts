@@ -55,7 +55,7 @@ export function prototypeTools(state: PrototypeState, ctx: TurnContext) {
     id: 'open_pull_request',
     description:
       'Save the approved prototype to the linked repo as a pull request: design/prototypes/<slug>/index.html ' +
-      'plus intent.md. ONLY call this when the user explicitly approves or asks to save / open a PR.',
+      'plus intent.md. It only works on the turn started by the Approve and open PR button.',
     inputSchema: z.object({
       slug: z.string().describe('kebab-case feature name, e.g. user-auth-flow'),
       title: z.string().describe('PR title, e.g. "Prototype: user auth flow"'),
@@ -63,6 +63,11 @@ export function prototypeTools(state: PrototypeState, ctx: TurnContext) {
     }),
     execute: async ({ slug, title, intent }) => {
       if (state.pr) return { ok: true, alreadyOpened: true, ...state.pr };
+      // A PR is a decision people make with the button, not something the model infers from a sentence.
+      if (!ctx.approved) {
+        state.calls.push('pr:not-approved');
+        return { ok: false, error: 'Pull requests are opened from the "Approve and open PR" button under the latest version. Tell the user to press it; nothing was opened.' };
+      }
       if (!ctx.design?.repo) {
         state.calls.push('pr:no-repo');
         return { ok: false, error: 'No repo linked in this thread. Ask the user to paste the GitHub repo link.' };
