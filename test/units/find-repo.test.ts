@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { findRepo } from '../../src/github/files.ts';
+import { findIssue, findRepo } from '../../src/github/files.ts';
 
 test('reads the Slack link formats', () => {
   assert.equal(findRepo(['look at <https://github.com/acme/web>']), 'acme/web');
@@ -25,4 +25,19 @@ test('the last link in the thread wins', () => {
 
 test('null when no repo was linked', () => {
   assert.equal(findRepo(['make me a login page', 'https://github.com/acme']), null);
+});
+
+// The issue a thread is about names the PR's folder and branch, so the prototype sits next to its issue.
+
+test('an issue link of the linked repo, or a bare #number, is the thread\'s issue', () => {
+  assert.equal(findIssue(['see <https://github.com/acme/web/issues/71>'], 'acme/web'), 71);
+  assert.equal(findIssue(['Thanks for your idea: a My karma page (#71).'], 'acme/web'), 71);
+  assert.equal(findIssue(['for #12', 'actually #34'], 'acme/web'), 34, 'the last one wins');
+});
+
+test('no issue from another repo, a Slack channel or without a linked repo', () => {
+  assert.equal(findIssue(['<https://github.com/acme/other/issues/9>'], 'acme/web'), null);
+  assert.equal(findIssue(['posted in <#C0123|design>'], 'acme/web'), null);
+  assert.equal(findIssue(['for #12'], null), null);
+  assert.equal(findIssue(['make it #1 priority'], 'acme/web'), 1, 'a bare #number is taken at its word');
 });

@@ -112,4 +112,18 @@ describe('A designer and a PM shape a login screen with the bot and hand it to d
     assert.match(latest.files['design/prototypes/login-screen/index.html'], />Continue</);
     assert.equal(model.pending(), 0);
   });
+
+  test('A thread about an issue: the PR folder and branch start with its number, and the intent can link it', async () => {
+    const idea = await slack.post('U_NEPTUNO', 'Thanks for your idea: a My karma page (#71). Is that right?', { botId: 'B_NEPTUNO' });
+    model.willDo(decide.write('karma.html', LOGIN_V1), decide.reply('First version.'));
+    await slack.post('U_KEVIN', slack.mention('prototype it for <https://github.com/acme/web>'), { thread: idea });
+    assert.match(model.lastSaw(), /issue #71/, 'the model knows which issue to link in intent.md');
+    model.willDo(decide.openPr('my-karma', 'Prototype: my karma', INTENT), decide.reply('Done.'));
+
+    await slack.click('U_KEVIN', slack.controls(idea)!, 'Approve and open PR');
+
+    const pr = repo.pulls.at(-1)!;
+    assert.equal(pr.head, 'design/71-my-karma');
+    assert.deepEqual(Object.keys(pr.files), ['design/prototypes/71-my-karma/index.html', 'design/prototypes/71-my-karma/intent.md']);
+  });
 });

@@ -1,6 +1,6 @@
 import type { WebClient } from '@slack/web-api';
 import { config } from '../config.ts';
-import { findRepo } from '../github/files.ts';
+import { findIssue, findRepo } from '../github/files.ts';
 import type { ChatMessage, PrototypeState } from '../agent/types.ts';
 
 type SlackFile = { name?: string; filetype?: string; url_private_download?: string };
@@ -72,7 +72,8 @@ export async function loadThread(
   const state: PrototypeState = { filename: lastHtml?.name ?? 'prototype.html', html: null, changed: false, calls: [] };
   if (withHtml && lastHtml?.url_private_download) state.html = await downloadFile(lastHtml.url_private_download);
 
-  return { history, state, botTurns, botInThread, repo: findRepo(userTexts), versions, nextSteps };
+  const repo = findRepo(userTexts);
+  return { history, state, botTurns, botInThread, repo, issue: findIssue(userTexts, repo), versions, nextSteps };
 }
 
 async function fetchReplies(client: WebClient, channel: string, threadTs: string) {

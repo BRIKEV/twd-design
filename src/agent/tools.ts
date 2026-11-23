@@ -76,7 +76,9 @@ export function prototypeTools(state: PrototypeState, ctx: TurnContext) {
         state.calls.push('pr:no-prototype');
         return { ok: false, error: 'There is no prototype to save yet.' };
       }
-      const safeSlug = slug.toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '') || 'prototype';
+      let safeSlug = slug.toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '') || 'prototype';
+      // The prototype sits next to its issue: design/prototypes/71-my-karma, branch design/71-my-karma.
+      if (ctx.issue && !safeSlug.startsWith(`${ctx.issue}-`)) safeSlug = `${ctx.issue}-${safeSlug}`;
       const dir = `design/prototypes/${safeSlug}`;
       const footer = [
         '---',

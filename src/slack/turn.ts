@@ -108,7 +108,7 @@ export async function handleTurn({ client, botUserId, channel, threadTs, message
   const doneWorking = await showWorking(client, channel, threadTs, messageTs);
 
   try {
-    const { history, state, botTurns, repo, versions, nextSteps } = await loadThread(client, botUserId, channel, threadTs);
+    const { history, state, botTurns, repo, issue, versions, nextSteps } = await loadThread(client, botUserId, channel, threadTs);
     if (botTurns >= config.maxTurnsPerThread) {
       await say(`This thread hit the ${config.maxTurnsPerThread}-turn limit. Start a new thread to keep going.`);
       return;
@@ -131,7 +131,7 @@ export async function handleTurn({ client, botUserId, channel, threadTs, message
       .catch(() => undefined);
 
     const started = Date.now();
-    const { text, usage, scenarios } = await runDesignAgent(history, state, { design, threadUrl, approved }, stop.signal);
+    const { text, usage, scenarios } = await runDesignAgent(history, state, { design, threadUrl, approved, issue }, stop.signal);
     log.info('turn', {
       thread: key,
       turn: botTurns + 1,

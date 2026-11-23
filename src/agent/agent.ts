@@ -47,7 +47,7 @@ export async function runDesignAgent(history: ChatMessage[], state: PrototypeSta
     tools: prototypeTools(state, ctx),
   });
 
-  const messages = [...designMessages(ctx.design), ...prototypeMessages(state), ...history];
+  const messages = [...designMessages(ctx.design, ctx.issue), ...prototypeMessages(state), ...history];
   const options = { maxSteps: 8, providerOptions, abortSignal };
   const first = await agent.generate(messages, options);
   const usage = [first.usage];
@@ -78,11 +78,12 @@ function sumUsage(all: Usage[]): Usage {
   return { inputTokens: add('inputTokens'), outputTokens: add('outputTokens'), totalTokens: add('totalTokens') };
 }
 
-function designMessages(design: DesignContext): ChatMessage[] {
+function designMessages(design: DesignContext, issue?: number | null): ChatMessage[] {
   if (!design) return [];
-  const content = design.guide
+  const about = issue ? `\n\nThis thread is about issue #${issue} (https://github.com/${design.repo}/issues/${issue}): link it at the top of intent.md.` : '';
+  const content = (design.guide
     ? `Design guide for this product, from ${design.repo} (design/DESIGN.md). Follow it: colors, typography, spacing, components and tone.\n\n${design.guide}`
-    : `The product repo is ${design.repo}, but it has no design/DESIGN.md. Use the default neutral design and say so in your reply.`;
+    : `The product repo is ${design.repo}, but it has no design/DESIGN.md. Use the default neutral design and say so in your reply.`) + about;
   return [
     { role: 'user', content },
     { role: 'assistant', content: 'Understood, I will design with that.' },

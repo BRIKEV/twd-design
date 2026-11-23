@@ -17,4 +17,4 @@ export type DesignContext = { repo: string; guide: string | null } | null;
  * What the turn knows beyond the messages: the linked repo, where the thread lives, and whether someone
  * pressed Approve (the only way a pull request gets opened).
  */
-export type TurnContext = { design: DesignContext; threadUrl?: string; approved?: boolean };
+export type TurnContext = { design: DesignContext; threadUrl?: string; approved?: boolean; issue?: number | null };

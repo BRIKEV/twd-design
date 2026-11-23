@@ -56,6 +56,10 @@ Approving opens a pull request with `design/prototypes/<feature>/index.html` and
 (problem, screens, agreed scenarios, notes for developers), linking back to the thread. If no repo is
 linked yet, the bot asks where the PR should go.
 
+When the thread is about an issue of the linked repo (an issue link, or `#71` in the message that started the
+thread), the folder and the branch start with its number: `design/prototypes/71-my-karma/`, branch
+`design/71-my-karma`, and the intent links the issue.
+
 Only the button opens a pull request. Asking in words ("ship it", "open the PR") gets a reminder to press
 it, so a sentence the bot misreads can never create a PR.
 
