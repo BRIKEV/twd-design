@@ -78,11 +78,13 @@ Stack: <e.g. Vue 3 + Tailwind 4>. <If you use Tailwind, say so: prototypes will 
 
 ## Where things are
 
-The code the bot reads before changing an existing screen.
+How the code is organized, so the bot can go from a route to the code of its screen. Conventions, not a
+list per screen: it stays true when screens are added.
 
-- `</settings>` → `<src/pages/settings/SettingsPage.tsx>`
-- Shared components: `<src/components/ui/>`
-- Tokens: `<src/styles/tokens.css>`
+- Router: `<src/router.tsx>`
+- Pages and features: `<pages in src/pages/ are thin; each feature's UI lives in src/features/<feature>/>`
+- Shared components: `<src/shared/ui/>`
+- Tokens: `<src/shared/styles/tokens.css>`
 
 ## Known gaps
 

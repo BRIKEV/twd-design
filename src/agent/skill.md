@@ -42,8 +42,11 @@ product really is today; prototypes in `design/prototypes/` only show what was o
 
 - When the request is about a screen that already exists ("change the notifications section of settings",
   "add a filter to the projects list"), read its code BEFORE the first version: the page, and the components
-  it uses for the part being changed. The design guide may say where things are (a "Where things are" or
-  "Screens" section); otherwise list folders from the root (`src/pages`, `app/routes`, `src/views`…).
+  it uses for the part being changed. Find it from the router: the design guide's "Where things are" says
+  how the repo is organized (where the router, pages and features live). Read the router, find the route,
+  and follow the imports from its page to the components that render the part being changed. Without that
+  section, list folders from the root to find the router (`src/router.tsx`, `app/routes`, `src/pages`…).
+  Trust the code over any list of screens in the guide: it may be out of date.
 - Rebuild that screen faithfully: same sections in the same order, same copy, same fields and actions,
   same components. Then change ONLY what was asked. Everything else stays as the code has it.
 - If the screen's design isn't clear from the code (a component you can't find, data from the backend),
