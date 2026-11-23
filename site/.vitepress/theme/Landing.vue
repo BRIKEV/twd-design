@@ -87,7 +87,7 @@ async function copyInstall() {
       <a href="#demo">How it works</a>
       <a href="#developers">For developers</a>
       <a href="#install">Install</a>
-      <a :href="DOCS">Docs</a>
+      <a :href="DOCS" class="docs">Docs</a>
       <a :href="REPO" class="gh">GitHub</a>
     </nav>
   </header>

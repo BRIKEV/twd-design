@@ -270,7 +270,7 @@ body:has(.landing) { margin: 0; background: var(--bg); color: var(--ink); font: 
 @media (max-width: 560px) {
   body:has(.landing) { font-size: 16px; }
   .landing main > section { padding-block: 56px; }
-  .landing .top nav a:not(.gh) { display: none; }
+  .landing .top nav a:not(.gh, .docs) { display: none; }
   .landing .msg { padding: 8px 12px; }
   .landing .slack { font-size: 14px; }
   .landing .working { padding-left: 58px !important; }
