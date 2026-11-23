@@ -3,8 +3,8 @@
 
 export const SITE = 'https://design.twd.dev'
 export const REPO = 'https://github.com/BRIKEV/twd-design'
-export const DOCS = `${REPO}/tree/main/docs`
-export const INSTALL = `${REPO}#install-about-15-minutes`
+export const DOCS = '/docs/'
+export const INSTALL = '/docs/#install-about-15-minutes'
 
 export const TITLE = 'TWD Design: from a Slack thread to a prototype your team can click'
 export const DESCRIPTION =
@@ -25,7 +25,7 @@ export const FAQ: { q: string; a: string }[] = [
   },
   {
     q: 'Is our data safe?',
-    a: 'It runs on your company servers with your own Slack app, GitHub App and AI key. Nothing is stored: the Slack thread is the only history. It reads one file from your repo, the design guide, and sends it with the thread to the AI provider your company chose.',
+    a: 'It runs on your company servers with your own Slack app, GitHub App and AI key. Nothing is stored: the Slack thread is the only history. It reads your repo\'s design guide, and the code of a screen when you ask to change one, and sends them with the thread to the AI provider your company chose. It never changes your code.',
   },
   {
     q: 'What does it cost?',

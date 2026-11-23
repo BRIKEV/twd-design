@@ -98,7 +98,7 @@ describe('Setting up the GitHub App', () => {
     const out = term.output();
     assert.match(out, /not installed on acme\/api yet\. Install it there: https:\/\/github\.com\/apps\/acme-design\/installations\/new/);
     assert.match(out, /acme\/api: the App can read it, but there is no design\/DESIGN\.md yet/);
-    assert.match(out, /docs\/guides\/design-md\.md/, 'and where to learn to write one');
+    assert.match(out, /docs\/guides\/design-md/, 'and where to learn to write one');
     assert.equal(lookups, 2);
   });
 

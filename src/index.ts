@@ -7,7 +7,7 @@ import { drainTurns } from './slack/turn.ts';
 const errors = configErrors();
 if (errors.length) {
   for (const e of errors) log.error('config', { problem: e });
-  log.error('Not starting: fix the configuration above. See docs/reference/configuration.md');
+  log.error('Not starting: fix the configuration above. See https://design.twd.dev/docs/reference/configuration');
   process.exit(1);
 }
 

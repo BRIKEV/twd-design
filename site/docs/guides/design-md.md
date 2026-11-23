@@ -39,7 +39,7 @@ close to portable as is.
 
 ## Recommended structure
 
-Start from the template in [`examples/DESIGN.md`](../../examples/DESIGN.md). It has these sections:
+Start from the template in [`examples/DESIGN.md`](https://github.com/BRIKEV/twd-design/blob/main/examples/DESIGN.md). It has these sections:
 
 | Section | What to put in it |
 |---|---|

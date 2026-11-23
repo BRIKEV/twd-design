@@ -28,7 +28,7 @@ try {
   }
   if (all || step === 'model') await setupModel({ ...terminal, envFile });
   console.log(all || step === 'model'
-    ? '\n.env is ready. Run it here with npm run dev, on a server with docker compose up -d, or on Render,\nFly.io, Railway or Kubernetes by importing this .env: docs/install/'
+    ? '\n.env is ready. Run it here with npm run dev, on a server with docker compose up -d, or on Render,\nFly.io, Railway or Kubernetes by importing this .env: https://design.twd.dev/docs/install/'
     : '\nSaved to .env.');
 } finally {
   rl.close();

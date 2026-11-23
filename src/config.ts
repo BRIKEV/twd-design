@@ -1,5 +1,5 @@
 // Every environment variable the bot reads, in one place.
-// Reference: docs/reference/configuration.md · Example: .env.example
+// Reference: https://design.twd.dev/docs/reference/configuration · Example: .env.example
 
 const env = process.env;
 

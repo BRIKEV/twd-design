@@ -145,7 +145,7 @@ export function homeView(pending: PendingPrototype[] | null) {
       { type: 'section', text: md('I turn a request into a *clickable HTML prototype* that follows your design guide. Mention me in any channel:') },
       { type: 'section', text: md(HOW_IT_WORKS) },
       { type: 'divider' },
-      ...(pending ? pendingBlocks(pending) : [context('Connect the GitHub App to see the prototypes waiting to be built (docs/setup/github-app.md).')]),
+      ...(pending ? pendingBlocks(pending) : [context('Connect the GitHub App to see the prototypes waiting to be built (<https://design.twd.dev/docs/setup/github-app|setup guide>).')]),
     ] as KnownBlock[],
   };
 }

@@ -1,6 +1,6 @@
 # TWD Design: Slack app manifest.
 # Create the app at https://api.slack.com/apps → Create New App → From a manifest → paste this file.
-# Guide: docs/setup/slack-app.md
+# Guide: https://design.twd.dev/docs/setup/slack-app
 #
 #   CHANGE  = make it yours (names, description)
 #   KEEP    = the bot needs it as is
@@ -22,7 +22,7 @@ features:
 
 oauth_config:
   scopes:
-    bot:                                         # KEEP all of them. Why each one: docs/setup/slack-app.md#scopes
+    bot:                                         # KEEP all of them. Why each one: https://design.twd.dev/docs/setup/slack-app#scopes
       - app_mentions:read                        # receive @mentions
       - chat:write                               # reply in the thread
       - files:write                              # attach the prototype .html

@@ -1,7 +1,7 @@
 # Render Blueprint: runs the published image, so there is nothing to build or fork.
 # Socket Mode (SLACK_APP_TOKEN set) needs no public URL; Render still uses /healthz to check the service.
 # Render's free web services sleep when idle, which would disconnect the bot: the starter plan (512 MB) is
-# the smallest that stays on. See docs/install/render.md
+# the smallest that stays on. See https://design.twd.dev/docs/install/render
 services:
   - type: web
     name: twd-design

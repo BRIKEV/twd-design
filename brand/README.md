@@ -21,4 +21,4 @@ Prototypes don't carry TWD's brand: they use **your** design guide. They only sh
 "Prototype · tests by TWD" mark in the screen switcher, which is prototype scaffolding.
 
 Teams that run their own instance can rename the bot and use their own icon: see
-[Create the Slack app](../docs/setup/slack-app.md).
+[Create the Slack app](../site/docs/setup/slack-app.md).

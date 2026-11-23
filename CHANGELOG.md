@@ -9,6 +9,8 @@ All notable changes to this project are documented here. The project follows [Se
   screen that already exists, rebuilds it as it is and changes only what was asked. It skips `.env` files,
   keys and certificates and reads at most 40 KB per file. A "Where things are" section in `DESIGN.md` tells
   it where each screen lives; the DESIGN.md guide has a prompt to generate the file with your coding agent.
+- The docs are part of the site: design.twd.dev/docs, with search, sidebar and dark mode. They moved from
+  `docs/` to `site/docs/`; the landing, the bot and the setup link to the site.
 
 ## [0.2.0] - 2026-11-23
 

@@ -91,7 +91,7 @@ async function checkRepo(t: Terminal, app: CreatedApp, repo: string) {
   t.say(guide.ok
     ? `✔ ${repo}: the App can read it, and it has a design/DESIGN.md. Prototypes will follow it.`
     : `✔ ${repo}: the App can read it, but there is no design/DESIGN.md yet. Prototypes will use a neutral look.\n` +
-      '  How to write one: https://github.com/BRIKEV/twd-design/blob/main/docs/guides/design-md.md');
+      '  How to write one: https://design.twd.dev/docs/guides/design-md');
 }
 
 export async function setupGithub({ ask, say, envFile, defaultName }: Terminal & { envFile: string; defaultName: string }) {

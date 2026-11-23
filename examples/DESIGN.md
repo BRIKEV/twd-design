@@ -3,7 +3,7 @@
 <!--
 Template for design/DESIGN.md. Replace everything in <angle brackets>, delete what doesn't apply.
 Aim for 1–4 pages: concrete values and short rules beat long prose.
-Guide: https://github.com/BRIKEV/twd-design/blob/main/docs/guides/design-md.md
+Guide: https://design.twd.dev/docs/guides/design-md
 -->
 
 ## Product

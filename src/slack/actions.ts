@@ -174,6 +174,6 @@ export async function postPending(client: WebClient, channel: string, threadTs: 
     channel,
     thread_ts: threadTs,
     text: 'Waiting to be built',
-    blocks: list ? pendingBlocks(list) : [{ type: 'section', text: { type: 'mrkdwn', text: 'GitHub is not set up for this bot yet (docs/setup/github-app.md).' } }],
+    blocks: list ? pendingBlocks(list) : [{ type: 'section', text: { type: 'mrkdwn', text: 'GitHub is not set up for this bot yet (<https://design.twd.dev/docs/setup/github-app|setup guide>).' } }],
   });
 }

@@ -1,7 +1,9 @@
 import type { Theme } from 'vitepress'
+import DefaultTheme from 'vitepress/theme'
 import Layout from './Layout.vue'
 import './style.css'
+import './docs.css'
 
-// A theme of its own instead of VitePress's default one: the site is a single landing page.
-// VitePress still prerenders it to static HTML, which is what search engines and link previews read.
-export default { Layout } satisfies Theme
+// The landing page has a look of its own (Landing.vue, style.css scoped to .landing); the docs under
+// /docs use VitePress's default theme with TWD colors (docs.css). Both are prerendered to static HTML.
+export default { extends: DefaultTheme, Layout } satisfies Theme

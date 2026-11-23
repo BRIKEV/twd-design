@@ -14,20 +14,24 @@ then it opens a pull request in your repo. Developers build until those scenario
 
 Self-hosted and open source: your Slack app, your GitHub App, your model key. Nothing is stored.
 
+**Docs: [design.twd.dev/docs](https://design.twd.dev/docs/)** (the same pages live in [`site/docs`](site/docs/index.md)).
+
 ```
 design  (TWD Design)  →  build  (twd-js + twd-ai)  →  CI  (twd-cli)  →  review  (twd-relay, recordings)
 ```
 
 - **Guided in Slack.** Say hi and it explains itself with examples. Each version comes with buttons to
   approve it, go back, or pick the repo from a list; Slack's Stop button cancels a turn.
-  [What your team sees](docs/guides/working-in-slack.md).
+  [What your team sees](site/docs/guides/working-in-slack.md).
 - **Iterate in the thread.** Reply "and on mobile?" and the bot posts a new version that keeps what was agreed.
 - **Uses your design.** Paste a GitHub repo link and it designs with that repo's `design/DESIGN.md`.
+- **Starts from your code.** Asked to change a screen that exists, it reads that screen's code in the repo,
+  rebuilds it as it is and changes only what was asked.
 - **Scenarios that really pass.** Before a version is posted, its TWD scenarios run in headless Chrome;
   failures go back to the model to fix, so the thread only sees versions whose scenarios pass.
 - **Speaks to developers.** Real routes and proposed endpoints live in `DEV:` comments; prototype-only
   scaffolding is marked `PROTOTYPE ONLY`.
-- **Ships as a PR.** Click Approve (or say so) and it commits `design/prototypes/<feature>/index.html`
+- **Ships as a PR.** Click Approve and it commits `design/prototypes/<feature>/index.html`
   plus an `intent.md` on a new branch. The app's Home tab lists the prototypes waiting to be built.
 - **Stateless.** No database: the Slack thread is the history, the last attached `.html` is the current
   version, and the last GitHub link is the repo.
@@ -85,7 +89,7 @@ test/
   units/                   rules that need their edge cases spelled out (edits, links, shim, App auth)
 diagnostics/
   slack-sandbox-probe.html measures what Slack's preview allows (open it in Slack)
-docs/
+site/docs/                 the documentation, served at design.twd.dev/docs
   index.md                 documentation home
   guides/                  the way of working: working in Slack, your design guide
   setup/                   Slack app, GitHub App, model
@@ -95,7 +99,7 @@ Dockerfile                 the image (node 24 slim + Chromium for the scenarios,
 docker-compose.yml         run it on any server
 render.yaml                Render blueprint (runs the published image)
 slack-manifest.yaml        Slack app manifest (annotated: what to change, what to keep)
-site/                      the landing page at design.twd.dev (VitePress, prerendered)
+site/                      design.twd.dev: the landing page and the docs (VitePress, prerendered)
 examples/DESIGN.md         template for your design guide
 brand/                     icon for the Slack app, logo, colors
 .github/workflows/         CI, and image release to GHCR on v* tags
@@ -103,30 +107,30 @@ brand/                     icon for the Slack app, logo, colors
 
 ## Install (about 15 minutes)
 
-Runs anywhere a container runs: 512 MB of memory and 0.5 vCPU are enough ([requirements](docs/index.md#requirements)).
+Runs anywhere a container runs: 512 MB of memory and 0.5 vCPU are enough ([requirements](site/docs/index.md#requirements)).
 
 
 1. Run `npm run setup` from a clone. It creates both apps with your name and color, checks your model key, and writes `.env`:
-   - [the Slack app](docs/setup/slack-app.md): from a link with the manifest filled in, tokens checked against Slack;
-   - [the GitHub App](docs/setup/github-app.md) (optional: design guide and pull requests): created from a
+   - [the Slack app](site/docs/setup/slack-app.md): from a link with the manifest filled in, tokens checked against Slack;
+   - [the GitHub App](site/docs/setup/github-app.md) (optional: design guide and pull requests): created from a
      manifest in your browser, with the App ID and private key saved for you. *5 min for both*
-   - [the model](docs/setup/models.md): any provider Mastra supports, with your key tried before it is saved.
+   - [the model](site/docs/setup/models.md): any provider Mastra supports, with your key tried before it is saved.
 2. Run it:
 
    ```bash
-   # .env from step 1. All variables: docs/reference/configuration.md
+   # .env from step 1. All variables: site/docs/reference/configuration.md
    docker compose up -d     # or docker run, or Render
    docker compose logs -f   # wait for {"msg":"ready",...}
    ```
 
-   Guides: [Docker](docs/install/docker.md) · [Docker Compose](docs/install/docker-compose.md) · [Render](docs/install/render.md) ·
-   [Fly.io, Railway, Kubernetes](docs/install/other-platforms.md)
+   Guides: [Docker](site/docs/install/docker.md) · [Docker Compose](site/docs/install/docker-compose.md) · [Render](site/docs/install/render.md) ·
+   [Fly.io, Railway, Kubernetes](site/docs/install/other-platforms.md)
 
    [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/BRIKEV/twd-design)
 
 3. Invite the bot to a channel (`/invite @twd-design`) and mention it.
 
-Something not working? [Troubleshooting](docs/reference/troubleshooting.md).
+Something not working? [Troubleshooting](site/docs/reference/troubleshooting.md).
 
 ### Development
 
@@ -150,8 +154,8 @@ The scripted model only replays decisions; whether the real model makes good one
 ## Operating it
 
 - **Configuration**: environment variables only, validated at startup. Reference:
-  [docs/reference/configuration.md](docs/reference/configuration.md).
-- **Security and data**: nothing is stored; what goes where is in [docs/reference/security.md](docs/reference/security.md).
+  [site/docs/reference/configuration.md](site/docs/reference/configuration.md).
+- **Security and data**: nothing is stored; what goes where is in [site/docs/reference/security.md](site/docs/reference/security.md).
 - **Health check**: `GET /healthz` on `PORT` (3000), in both Socket Mode and HTTP mode.
 - **Logs**: one JSON object per line. Each bot turn logs duration, tools used and token usage.
 - **Shutdown**: on `SIGTERM` the bot stops taking turns and lets running ones finish

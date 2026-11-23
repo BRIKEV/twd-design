@@ -3,7 +3,7 @@ import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { DOCS, FAQ, INSTALL, REPO } from '../content'
 import NotificationsDemo from './NotificationsDemo.vue'
 
-const doc = (path: string) => `${REPO}/blob/main/docs/${path}`
+const doc = (path: string) => `/docs/${path.replace(/\.md$/, '')}`
 
 // The demo: as each step's text crosses the middle of the screen, the thread on the side moves on.
 const STEPS = [
@@ -68,7 +68,7 @@ onBeforeUnmount(() => observers.forEach((o) => o.disconnect()))
 
 async function copyInstall() {
   try {
-    await navigator.clipboard.writeText(INSTALL)
+    await navigator.clipboard.writeText(new URL(INSTALL, window.location.href).href)
     copied.value = true
     setTimeout(() => (copied.value = false), 2000)
   } catch {
@@ -87,6 +87,7 @@ async function copyInstall() {
       <a href="#demo">How it works</a>
       <a href="#developers">For developers</a>
       <a href="#install">Install</a>
+      <a :href="DOCS">Docs</a>
       <a :href="REPO" class="gh">GitHub</a>
     </nav>
   </header>

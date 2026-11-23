@@ -93,8 +93,8 @@ describe('Setting up the Slack app', () => {
   });
 
   test('The one-click link in the docs creates the same app as the manifest', () => {
-    const docs = readFileSync(new URL('../../docs/setup/slack-app.md', import.meta.url), 'utf8');
+    const docs = readFileSync(new URL('../../site/docs/setup/slack-app.md', import.meta.url), 'utf8');
     const defaults = brandedManifest({ name: 'TWD Design', handle: 'twd-design', color: '#123956' });
-    assert.equal(manifestIn(docs), defaults, 'regenerate the link in docs/setup/slack-app.md after changing slack-manifest.yaml');
+    assert.equal(manifestIn(docs), defaults, 'regenerate the link in site/docs/setup/slack-app.md after changing slack-manifest.yaml');
   });
 });

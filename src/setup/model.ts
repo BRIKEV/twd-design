@@ -62,7 +62,7 @@ async function tryKey(id: string, apiKey: string): Promise<string | null> {
 export async function setupModel({ ask, say, envFile }: Terminal & { envFile: string }) {
   const t = { ask, say };
   const current = readEnv(envFile);
-  say(`\nModel (what the bot designs with). Which one fits your company: docs/setup/models.md\n`);
+  say(`\nModel (what the bot designs with). Which one fits your company: https://design.twd.dev/docs/setup/models\n`);
 
   const id = await askValid(t, 'Model, as provider/model', current.MODEL ?? RECOMMENDED, modelProblem);
   const keyVar = keyVarOf(id.slice(0, id.indexOf('/')));
