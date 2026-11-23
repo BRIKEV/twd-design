@@ -33,7 +33,7 @@ feature starts from those scenarios and builds until they pass in the real app.
 |---|---|---|
 | Memory | 512 MB | 1 GB, if several threads iterate at the same time |
 | CPU | 0.5 vCPU | 1 vCPU |
-| Disk | The image, about 390 MB | |
+| Disk | About 1.6 GB for the image (a 390 MB download), Chromium included | |
 | Network | Outbound HTTPS to Slack, your model provider, GitHub and `cdn.jsdelivr.net` | No inbound traffic in Socket Mode |
 
 Most of the memory goes to the headless Chrome that runs each version's scenarios: the bot uses about
@@ -49,7 +49,8 @@ Fly.io, Railway, ECS, Cloud Run with min instances 1).
 1. [Create the Slack app](./setup/slack-app.md) from the manifest. *5 min*
 2. [Create the GitHub App](./setup/github-app.md) (optional: design guide and pull requests). *5 min*
 3. [Choose a model](./setup/models.md) and get its API key.
-4. Run it: [Docker](./install/docker.md), [Docker Compose](./install/docker-compose.md) or [Render](./install/render.md). *5 min*
+4. Run it: [Docker](./install/docker.md), [Docker Compose](./install/docker-compose.md), [Render](./install/render.md) or
+   [another platform](./install/other-platforms.md) (Fly.io, Railway, Kubernetes…). *5 min*
 5. Invite the bot to a channel and mention it.
 
 ## Guides

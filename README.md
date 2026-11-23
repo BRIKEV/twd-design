@@ -89,11 +89,11 @@ docs/
   index.md                 documentation home
   guides/                  the way of working: working in Slack, your design guide
   setup/                   Slack app, GitHub App, model
-  install/                 Docker, Docker Compose, Render
+  install/                 Docker, Docker Compose, Render, other platforms
   reference/               configuration, security, observability, troubleshooting
 Dockerfile                 the image (node 24 slim + Chromium for the scenarios, non-root, /healthz)
 docker-compose.yml         run it on any server
-render.yaml                Render blueprint (same Dockerfile)
+render.yaml                Render blueprint (runs the published image)
 slack-manifest.yaml        Slack app manifest (annotated: what to change, what to keep)
 site/                      the landing page at design.twd.dev (VitePress, prerendered)
 examples/DESIGN.md         template for your design guide
@@ -119,7 +119,10 @@ Runs anywhere a container runs: 512 MB of memory and 0.5 vCPU are enough ([requi
    docker compose logs -f   # wait for {"msg":"ready",...}
    ```
 
-   Guides: [Docker](docs/install/docker.md) · [Docker Compose](docs/install/docker-compose.md) · [Render](docs/install/render.md)
+   Guides: [Docker](docs/install/docker.md) · [Docker Compose](docs/install/docker-compose.md) · [Render](docs/install/render.md) ·
+   [Fly.io, Railway, Kubernetes](docs/install/other-platforms.md)
+
+   [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/BRIKEV/twd-design)
 
 3. Invite the bot to a channel (`/invite @twd-design`) and mention it.
 

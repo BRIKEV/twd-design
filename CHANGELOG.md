@@ -4,10 +4,12 @@ All notable changes to this project are documented here. The project follows [Se
 
 ## [Unreleased]
 
-### Changed
-- Existing Slack apps need the new manifest (interactivity, Home tab, `app_home_opened` and `agent_session_stopped` events). See "Updating an app you created before" in `docs/setup/slack-app.md`.
+## [0.1.0] - 2026-11-23
+
+First release. Image: `ghcr.io/brikev/twd-design:0.1.0` (linux/amd64, linux/arm64).
 
 ### Added
+- Deploy to Render button: the Blueprint runs the published image, nothing to fork or build. Guides for Fly.io, Railway and Kubernetes, each importing the `.env` from `npm run setup` in one go.
 - Landing page for design.twd.dev in `site/` (VitePress, prerendered): `npm run site:dev`, `npm run site:build`.
 - Prototypes load twd-js 1.14.0. The headless check runs a prototype's scenarios once per viewport it declares, like twd-cli: a `{ viewport: 'mobile' }` scenario runs at a mobile width instead of being skipped at the desktop size, and a scenario tagged with an undeclared viewport is reported as failing.
 - Every new version's TWD scenarios run in headless Chrome before it is posted (pace 0, about 1–3 s). Failures go back to the model to fix, up to two rounds; the version then says how many scenarios pass, or which one still fails. `SCENARIO_CHECK=off` skips it. The Docker image includes Chromium.
@@ -27,3 +29,6 @@ All notable changes to this project are documented here. The project follows [Se
 - Docker image, `docker-compose.yml`, Render blueprint.
 - `/healthz`, configuration validation at startup, JSON logs, graceful shutdown on `SIGTERM`.
 - Deterministic test suite (`npm test`, `node:test`, no network): business stories end to end with a fake Slack channel, a fake GitHub repo and a scripted model, plus unit tests for edits, repo links, the form shim and GitHub App auth. Runs in CI.
+
+[Unreleased]: https://github.com/BRIKEV/twd-design/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/BRIKEV/twd-design/releases/tag/v0.1.0

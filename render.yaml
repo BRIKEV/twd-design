@@ -1,20 +1,22 @@
-# Render Blueprint: builds the same Dockerfile used everywhere else.
+# Render Blueprint: runs the published image, so there is nothing to build or fork.
 # Socket Mode (SLACK_APP_TOKEN set) needs no public URL; Render still uses /healthz to check the service.
-# Note: Render's free web services sleep when idle. Use a paid instance (or a background worker in
-# Socket Mode) so the bot is always connected. See docs/install/render.md
+# Render's free web services sleep when idle, which would disconnect the bot: the starter plan (512 MB) is
+# the smallest that stays on. See docs/install/render.md
 services:
   - type: web
     name: twd-design
-    runtime: docker
-    dockerfilePath: ./Dockerfile
+    runtime: image
+    image:
+      url: ghcr.io/brikev/twd-design:0.1   # 0.1.x patches on every redeploy
     plan: starter
     healthCheckPath: /healthz
     envVars:
+      # Render asks for these when you create the service: copy them from the .env that
+      # `npm run setup` wrote. Any other variable (another provider's key, LOG_LEVEL...) goes in
+      # Environment → Add from .env afterwards.
       - key: SLACK_BOT_TOKEN
         sync: false
       - key: SLACK_APP_TOKEN
-        sync: false
-      - key: SLACK_SIGNING_SECRET
         sync: false
       - key: MODEL
         value: zai/glm-5.3-flash
