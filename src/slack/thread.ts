@@ -39,6 +39,7 @@ export async function loadThread(
   let nextSteps: NextSteps | undefined;
   let botTurns = 0;
   let botInThread = false;
+  let askedRepo = false;
   for (const m of messages) {
     const meta = m.metadata?.event_type;
     if (m.user === botUserId && meta === SAID) {
@@ -49,6 +50,7 @@ export async function loadThread(
       botInThread = true;
       const p = m.metadata!.event_payload ?? {};
       if (p.kind === 'next_steps' && m.ts) nextSteps = { ts: m.ts, version: Number(p.version), turn: Number(p.turn) };
+      if (p.kind === 'ask_repo') askedRepo = true;
     } else if (m.user === botUserId) {
       botTurns++;
       botInThread = true;
@@ -73,7 +75,7 @@ export async function loadThread(
   if (withHtml && lastHtml?.url_private_download) state.html = await downloadFile(lastHtml.url_private_download);
 
   const repo = findRepo(userTexts);
-  return { history, state, botTurns, botInThread, repo, issue: findIssue(userTexts, repo), versions, nextSteps };
+  return { history, state, botTurns, botInThread, askedRepo, repo, issue: findIssue(userTexts, repo), versions, nextSteps };
 }
 
 async function fetchReplies(client: WebClient, channel: string, threadTs: string) {

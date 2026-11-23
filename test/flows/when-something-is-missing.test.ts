@@ -21,7 +21,7 @@ describe('When something is missing or fails, the thread says what to do', () =>
 
   test('Without a linked repo, it designs with neutral defaults', async () => {
     model.willDo(decide.write('signup.html', LOGIN_V1), decide.reply('Here is a signup with neutral styles.'));
-    await slack.post('U_ANA', slack.mention('a signup page'));
+    await slack.ask('U_ANA', 'a signup page');
     assert.ok(!model.lastSaw().includes('Design guide for this product'));
   });
 
@@ -53,7 +53,7 @@ describe('When something is missing or fails, the thread says what to do', () =>
 
   test('The model provider fails: the error is posted, and the thread keeps working afterwards', async () => {
     model.willDo(decide.reply('What should it show?'));
-    const chat = await slack.post('U_ANA', slack.mention('a billing page'));
+    const chat = await slack.ask('U_ANA', 'a billing page');
 
     model.willFail('Rate limit exceeded');
     await slack.post('U_ANA', slack.mention('monthly invoices, with download'), { thread: chat });
@@ -67,7 +67,7 @@ describe('When something is missing or fails, the thread says what to do', () =>
 
   test('A message while the bot is still working gets a "one moment", not a second run', async () => {
     model.willDo(decide.reply('Working on it.'));
-    const chat = await slack.post('U_ANA', slack.mention('a team page'));
+    const chat = await slack.ask('U_ANA', 'a team page');
 
     const release = slack.holdNextTurn();
     model.willDo(decide.reply('Added avatars.'));
@@ -83,7 +83,7 @@ describe('When something is missing or fails, the thread says what to do', () =>
 
   test('A thread that reaches the turn limit asks to start a new one', async () => {
     model.willDo(decide.reply('ok'));
-    const chat = await slack.post('U_ANA', slack.mention('a never-ending settings page'));
+    const chat = await slack.ask('U_ANA', 'a never-ending settings page');
     for (let i = 1; i < 15; i++) {
       model.willDo(decide.reply('ok'));
       await slack.post('U_ANA', slack.mention(`change ${i}`), { thread: chat });
@@ -98,7 +98,7 @@ describe('When something is missing or fails, the thread says what to do', () =>
 
   test('Slack fails while reading the thread: the error is posted in the thread', async () => {
     model.willDo(decide.reply('Sure.'));
-    const chat = await slack.post('U_ANA', slack.mention('a profile page'));
+    const chat = await slack.ask('U_ANA', 'a profile page');
     slack.failNextRead('ratelimited');
     await slack.post('U_ANA', slack.mention('with a photo'), { thread: chat });
     assert.equal(slack.lastReply(chat)!.text, 'Something failed: ratelimited');

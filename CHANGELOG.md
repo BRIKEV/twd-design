@@ -4,6 +4,21 @@ All notable changes to this project are documented here. The project follows [Se
 
 ## [Unreleased]
 
+### Changed
+- The bot only answers when mentioned, also in threads it is already in. Threads with other bots (an issue
+  tracker, CI) or replies between people no longer start a turn. Existing Slack apps can drop the
+  `message.channels` and `message.groups` events.
+- Pull requests are opened only from the **Approve and open PR** button. Asking in words gets a reminder to
+  press it, so a misread sentence can't open a PR.
+
+### Added
+- Before the first version of a thread with no repo, the bot asks which repo it is for (**Pick repo** or
+  **Design without a repo**), and mentions pasting the issue link. Once per thread.
+- The message that started a thread is context even when another app posted it (an issue tracker's
+  summary, for example). Other apps' replies inside the thread are still left out.
+- A thread about an issue of the linked repo names the PR folder and branch after it
+  (`design/prototypes/71-my-karma`, `design/71-my-karma`), and the intent links the issue.
+
 ## [0.1.0] - 2026-11-23
 
 First release. Image: `ghcr.io/brikev/twd-design:0.1.0` (linux/amd64, linux/arm64).

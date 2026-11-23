@@ -5,7 +5,7 @@ import type { DesignContext } from '../agent/types.ts';
 import { AppNotInstalledError } from '../github/client.ts';
 import { readRepoFile } from '../github/files.ts';
 import { errorFields, log } from '../log.ts';
-import { nextStepsBlocks, replacedBlocks } from './blocks.ts';
+import { askRepoBlocks, nextStepsBlocks, replacedBlocks } from './blocks.ts';
 import { loadThread, UI, type NextSteps } from './thread.ts';
 
 // In-memory only: avoids two runs on the same thread at once, lets someone stop a running turn,
@@ -105,15 +105,28 @@ export async function handleTurn({ client, botUserId, channel, threadTs, message
   }
   const stop = new AbortController();
   running.set(key, stop);
-  const doneWorking = await showWorking(client, channel, threadTs, messageTs);
+  let doneWorking: (() => Promise<unknown>) | undefined;
 
   try {
-    const { history, state, botTurns, repo, issue, versions, nextSteps } = await loadThread(client, botUserId, channel, threadTs);
+    const { history, state, botTurns, askedRepo, repo, issue, versions, nextSteps } = await loadThread(client, botUserId, channel, threadTs);
     if (botTurns >= config.maxTurnsPerThread) {
       await say(`This thread hit the ${config.maxTurnsPerThread}-turn limit. Start a new thread to keep going.`);
       return;
     }
 
+    // Before the first version, a repo makes everything better (its guide, the issue, the PR): ask once.
+    if (!repo && !versions.length && !askedRepo && !approved && config.github.enabled) {
+      await client.chat.postMessage({
+        channel,
+        thread_ts: threadTs,
+        text: 'Which repo is this for? Pick it, or design without a repo.',
+        blocks: askRepoBlocks(),
+        metadata: { event_type: UI, event_payload: { kind: 'ask_repo' } },
+      });
+      return;
+    }
+
+    doneWorking = await showWorking(client, channel, threadTs, messageTs);
     let design: DesignContext = null;
     if (repo && config.github.enabled) {
       try {
@@ -178,6 +191,6 @@ export async function handleTurn({ client, botUserId, channel, threadTs, message
     await say(`Something failed: ${(err as Error).message}`);
   } finally {
     running.delete(key);
-    await doneWorking();
+    await doneWorking?.();
   }
 }

@@ -2,7 +2,7 @@ import type { WebClient } from '@slack/web-api';
 import { config } from '../config.ts';
 import { installedRepos, pendingPrototypes } from '../github/repos.ts';
 import { errorFields, log } from '../log.ts';
-import { approvedBlocks, homeView, nextStepsBlocks, pendingBlocks, pickRepoLoading, pickRepoModal, type PickRepoMeta } from './blocks.ts';
+import { approvedBlocks, askRepoAnswered, homeView, nextStepsBlocks, pendingBlocks, pickRepoLoading, pickRepoModal, type PickRepoMeta } from './blocks.ts';
 import { downloadFile, loadThread, SAID } from './thread.ts';
 import { handleTurn, isBusy, postVersion, stopTurn } from './turn.ts';
 
@@ -65,8 +65,15 @@ export async function onAction({ body, client }: { body: ActionBody; client: Web
 
     if (action.action_id === 'twd_pick_repo') {
       await openRepoPicker(client, body.trigger_id, {
-        channel, threadTs, nextTs: message.ts, version: latest, turn: thread.nextSteps?.turn ?? thread.botTurns, then: 'link',
+        channel, threadTs, nextTs: message.ts, version: latest, turn: thread.nextSteps?.turn ?? thread.botTurns,
+        then: action.value === 'design' ? 'design' : 'link',
       });
+      return;
+    }
+
+    if (action.action_id === 'twd_design_anyway') {
+      await client.chat.update({ channel, ts: message.ts, text: 'Designing without a repo', blocks: askRepoAnswered(`Without a repo, as <@${user}> chose.`) });
+      await handleTurn({ client, botUserId, channel, threadTs, messageTs: message.ts });
       return;
     }
 
@@ -122,7 +129,12 @@ export async function onViewSubmission({ body, client }: { body: ViewBody; clien
   const repo = body.view.state.values.repo?.pick?.selected_option?.value;
   if (!repo) return;
   const user = body.user.id;
-  await sayFor(client, user, meta.channel, meta.threadTs, `Linked https://github.com/${repo}`);
+  const linkedTs = await sayFor(client, user, meta.channel, meta.threadTs, `Linked https://github.com/${repo}`);
+  if (meta.then === 'design') {
+    await client.chat.update({ channel: meta.channel, ts: meta.nextTs, text: `Repo: ${repo}`, blocks: askRepoAnswered(`*${repo}*, picked by <@${user}>.`) });
+    await handleTurn({ client, botUserId, channel: meta.channel, threadTs: meta.threadTs, messageTs: linkedTs });
+    return;
+  }
   if (meta.then === 'approve') {
     await approve(client, botUserId, { channel: meta.channel, threadTs: meta.threadTs, nextTs: meta.nextTs, version: meta.version, user });
     return;

@@ -22,8 +22,13 @@ the discussion and designs from it.
 
 ## Ask for a screen
 
-Describe the screen in your own words. Paste the link to your repo (`https://github.com/acme/web`) if you
-want it to use that repo's [design guide](./design-md.md), or pick the repo later from a button.
+Describe the screen in your own words, and paste the link to your repo (`https://github.com/acme/web`) so it
+uses that repo's [design guide](./design-md.md). If there is an issue for it, paste its link too.
+
+If the first request of a thread has no repo, the bot asks which one it is for before designing anything,
+with two buttons: **Pick repo** (the repos the GitHub App is installed on, and which ones have a design
+guide) and **Design without a repo** (a neutral look; you can still pick a repo before approving). It asks
+once per thread, and answering with a repo link in words works too.
 
 While it works, Slack shows that the bot is working with a **Stop** button. Stopping throws away the
 version in progress: the last one posted is still the current one.

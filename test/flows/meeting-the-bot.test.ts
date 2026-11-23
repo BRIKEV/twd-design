@@ -16,7 +16,7 @@ describe('Meeting the bot: anyone can tell what it does and try it', () => {
   let root: Awaited<ReturnType<typeof slack.post>>;
 
   test('Ana says hi and learns what the bot does, how to work with it, and what to try', async () => {
-    root = await slack.post('U_ANA', slack.mention('hi!'));
+    root = await slack.ask('U_ANA', 'hi!');
 
     const welcome = slack.textOf(slack.lastReply(root));
     assert.match(welcome, /clickable HTML prototype/);
@@ -28,7 +28,7 @@ describe('Meeting the bot: anyone can tell what it does and try it', () => {
   });
 
   test('A bare mention, or "help" in a thread, gets the same answer', async () => {
-    const bare = await slack.post('U_BRUNO', slack.mention(''));
+    const bare = await slack.ask('U_BRUNO', '');
     assert.match(slack.textOf(slack.lastReply(bare)), /Ask for a screen/);
 
     await slack.post('U_BRUNO', slack.mention('help'), { thread: bare });
@@ -41,6 +41,7 @@ describe('Meeting the bot: anyone can tell what it does and try it', () => {
     model.willDo(decide.write('login.html', LOGIN_V1), decide.reply('Here is a first version of the login.'));
 
     await slack.click('U_ANA', slack.botReplies(root)[0], 'A login screen');
+    await slack.click('U_ANA', slack.lastReply(root)!, 'Design without a repo'); // the bot asks first: she has none
 
     assert.ok(slack.thread(root).some((m) => m.text?.startsWith('<@U_ANA>: A login screen with email and password')), 'the team sees who asked for what');
     assert.ok(model.lastSaw().includes('A login screen with email and password'), 'the model got it as her request');
@@ -59,7 +60,7 @@ describe('Meeting the bot: anyone can tell what it does and try it', () => {
     const discussion = await slack.post('U_BRUNO', 'we need a page to export invoices as CSV, with a date range');
     model.willDo(decide.write('export.html', LOGIN_V1), decide.reply('First version of the export page.'));
 
-    await slack.post('U_ANA', slack.mention(''), { thread: discussion });
+    await slack.ask('U_ANA', '', { thread: discussion });
 
     assert.ok(model.lastSaw().includes('export invoices as CSV'));
     assert.equal(slack.versions(discussion).length, 1);

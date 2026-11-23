@@ -49,7 +49,23 @@ export const replacedBlocks = (version: number, by: number) => [context(`v${vers
 export const approvedBlocks = (version: number, user: string) => [context(`v${version} · Approved by <@${user}>`)];
 
 /** What the modal remembers between the click and the submit. */
-export type PickRepoMeta = { channel: string; threadTs: string; nextTs: string; version: number; turn: number; then: 'link' | 'approve' };
+/** What to do after the repo is picked: re-render the buttons, approve, or design the first version. */
+export type PickRepoMeta = { channel: string; threadTs: string; nextTs: string; version: number; turn: number; then: 'link' | 'approve' | 'design' };
+
+/** Before the first version of a thread with no repo: which one it is for. */
+export function askRepoBlocks(): KnownBlock[] {
+  return [
+    { type: 'section', text: md('*Which repo is this for?* I\'ll follow its design guide, and open the PR there when you approve. If there is an issue for it, paste its link too.') },
+    {
+      type: 'actions',
+      elements: [
+        { type: 'button', action_id: 'twd_pick_repo', text: plain('Pick repo'), value: 'design', style: 'primary' },
+        { type: 'button', action_id: 'twd_design_anyway', text: plain('Design without a repo'), value: 'design' },
+      ],
+    },
+  ];
+}
+export const askRepoAnswered = (answer: string) => [context(`Which repo is this for? ${answer}`)];
 
 const pickTitle = (then: PickRepoMeta['then']) => (then === 'approve' ? 'Open the PR' : 'Pick repo');
 

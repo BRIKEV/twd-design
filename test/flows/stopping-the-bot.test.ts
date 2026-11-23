@@ -18,7 +18,7 @@ describe('Stopping the bot', () => {
   test('Slack shows that the bot is working, with its Stop button, until the version is posted', async () => {
     model.willDo(decide.write('login.html', LOGIN_V1), decide.reply('Here is a first version.'));
 
-    root = await slack.post('U_ANA', slack.mention('a login screen'));
+    root = await slack.ask('U_ANA', 'a login screen');
 
     assert.deepEqual(slack.statuses, ['processing', 'active']);
     assert.deepEqual(slack.reactions, [], 'no hourglass: Slack has its own indicator');

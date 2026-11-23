@@ -36,7 +36,7 @@ describe('Scenarios pass before a version is posted', () => {
     model.willDo(decide.write('settings.html', BROKEN.replace(`'be.checked'`, FIXED_ASSERT)), decide.reply('Here is a first version.'));
     reports.push(pass(4));
 
-    const root = await slack.post('U_ANA', slack.mention('notification settings'));
+    const root = await slack.ask('U_ANA', 'notification settings');
 
     assert.equal(checked.at(-1), slack.versions(root)[0].html, 'what was checked is what was posted');
     assert.match(comment(root), /^Here is a first version\.\n\n.*4 TWD scenarios pass/);
@@ -51,7 +51,7 @@ describe('Scenarios pass before a version is posted', () => {
     );
     reports.push(fail(3, 'Settings > email is on', 'Assertion failed: Expected element to be checked'), pass(4));
 
-    const root = await slack.post('U_ANA', slack.mention('notification settings'));
+    const root = await slack.ask('U_ANA', 'notification settings');
 
     const fixPrompt = model.saw(calls + 2);
     assert.ok(fixPrompt.includes('Settings > email is on') && fixPrompt.includes('Expected element to be checked'), 'the model got the failure');
@@ -71,7 +71,7 @@ describe('Scenarios pass before a version is posted', () => {
     const failing = fail(3, 'Settings > email is on', 'Assertion failed: Expected element to be checked');
     reports.push(failing, failing, failing);
 
-    const root = await slack.post('U_ANA', slack.mention('notification settings'));
+    const root = await slack.ask('U_ANA', 'notification settings');
 
     assert.equal(slack.versions(root).length, 1);
     assert.match(comment(root), /1 of 4 TWD scenarios fails: "Settings > email is on"/);
@@ -82,7 +82,7 @@ describe('Scenarios pass before a version is posted', () => {
     model.willDo(decide.write('settings.html', BROKEN), decide.reply('Here is a first version.'));
     reports.push({ unavailable: 'no headless browser' });
 
-    const root = await slack.post('U_ANA', slack.mention('notification settings'));
+    const root = await slack.ask('U_ANA', 'notification settings');
 
     assert.equal(comment(root), 'Here is a first version.');
   });
@@ -90,7 +90,7 @@ describe('Scenarios pass before a version is posted', () => {
   test('A version that is only an answer runs nothing', async () => {
     model.willDo(decide.reply('Errors show under the form.'));
 
-    await slack.post('U_ANA', slack.mention('where do errors show?'));
+    await slack.ask('U_ANA', 'where do errors show?');
 
     assert.equal(reports.length, 0);
   });

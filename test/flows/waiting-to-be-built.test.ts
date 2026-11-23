@@ -46,7 +46,7 @@ describe('What is waiting to be built', () => {
   });
 
   test('"@bot pending" in a channel answers with the same list', async () => {
-    const root = await slack.post('U_BRUNO', slack.mention('pending'));
+    const root = await slack.ask('U_BRUNO', 'pending');
 
     assert.match(slack.textOf(slack.lastReply(root)), /magic link login[\s\S]*order history/);
     assert.equal(model.calls(), 0);

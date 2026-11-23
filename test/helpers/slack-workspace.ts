@@ -47,8 +47,7 @@ export function slackWorkspace(net: FakeNet) {
   let clock = 1000;
   let agentSessions = true;
   let assistantStatus = true;
-  let holdNext: Promise<void> | undefined; // armed by holdNextTurn()
-  let armed: Promise<void> | undefined; // taken by the next thread read inside a turn
+  let armed: Promise<void> | undefined; // set by holdNextTurn(), taken by the next thread read
   let failNextRead: string | undefined;
 
   const append = (threadTs: string, m: Omit<Message, 'ts' | 'thread_ts'>) => {
@@ -59,7 +58,6 @@ export function slackWorkspace(net: FakeNet) {
     return msg;
   };
   const find = (ts: string) => [...threads.values()].flat().find((m) => m.ts === ts);
-  const workingStarted = () => { armed = holdNext; holdNext = undefined; };
 
   const client = {
     conversations: {
@@ -102,7 +100,7 @@ export function slackWorkspace(net: FakeNet) {
         setStatus: async ({ status }: any) => {
           if (!agentSessions) throw new Error('An API error occurred: feature_disabled');
           statuses.push(status);
-          if (status === 'processing') workingStarted();
+          
           return { ok: true };
         },
       },
@@ -113,13 +111,13 @@ export function slackWorkspace(net: FakeNet) {
         setStatus: async ({ status }: any) => {
           if (!assistantStatus) throw new Error('An API error occurred: method_not_supported_for_channel_type');
           statuses.push(status === '' ? 'cleared' : 'working…');
-          if (status) workingStarted();
+          
           return { ok: true };
         },
       },
     },
     reactions: {
-      add: async ({ name }: any) => { reactions.push(`+${name}`); workingStarted(); return { ok: true }; },
+      add: async ({ name }: any) => { reactions.push(`+${name}`); return { ok: true }; },
       remove: async ({ name }: any) => { reactions.push(`-${name}`); return { ok: true }; },
     },
     views: {
@@ -139,6 +137,20 @@ export function slackWorkspace(net: FakeNet) {
     const context = { retryNum: retry || undefined };
     const event = { ...msg, channel: CHANNEL, thread_ts: thread ? msg.thread_ts : undefined, subtype };
     if (text.includes(`<@${BOT}>`)) await onMention({ event, client, context }, BOT);
+    return msg;
+  }
+
+  /**
+   * Someone asks the bot for something, for stories that aren't about the repo: if the bot first asks
+   * which repo it is for, they answer "Design without a repo", like a person who doesn't know.
+   */
+  async function ask(user: string, text: string, options: { thread?: Message } = {}) {
+    const msg = await post(user, `<@${BOT}> ${text}`, options);
+    const root = options.thread ?? msg;
+    const question = (threads.get(root.thread_ts) ?? []).filter((m) => m.user === BOT).at(-1);
+    if (question && buttonsIn(question.blocks).some((b) => b.text?.text === 'Design without a repo')) {
+      await click(user, question, 'Design without a repo');
+    }
     return msg;
   }
 
@@ -183,6 +195,7 @@ export function slackWorkspace(net: FakeNet) {
     statuses,
     ephemerals,
     post,
+    ask,
     click,
     submit,
     thread,
@@ -208,7 +221,7 @@ export function slackWorkspace(net: FakeNet) {
     /** Neither status is available: the bot falls back to an hourglass reaction. */
     withoutAnyStatus: () => { agentSessions = false; assistantStatus = false; },
     /** The next turn stalls (a slow model or Slack) until the returned function is called. */
-    holdNextTurn: () => { let release!: () => void; holdNext = new Promise((r) => { release = r; }); return () => release(); },
+    holdNextTurn: () => { let release!: () => void; armed = new Promise((r) => { release = r; }); return () => release(); },
     failNextRead: (error: string) => { failNextRead = error; },
     mention: (text: string) => `<@${BOT}> ${text}`,
   };

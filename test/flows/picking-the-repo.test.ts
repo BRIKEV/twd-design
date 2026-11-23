@@ -23,7 +23,7 @@ describe('Picking the repo from a list', () => {
   test('Without a repo, the version offers to pick one', async () => {
     model.willDo(decide.write('orders.html', LOGIN_V1), decide.reply('Here is a first version.'));
 
-    root = await slack.post('U_BRUNO', slack.mention('an order history page with filters by date and status'));
+    root = await slack.ask('U_BRUNO', 'an order history page with filters by date and status');
 
     next = slack.lastReply(root);
     assert.deepEqual(slack.buttons(next), ['Approve and open PR', 'Pick repo']);
@@ -53,7 +53,7 @@ describe('Picking the repo from a list', () => {
 
   test('Approving without a repo asks where to open the PR, then opens it there', async () => {
     model.willDo(decide.write('settings.html', LOGIN_V1), decide.reply('First version.'));
-    const other = await slack.post('U_ANA', slack.mention('notification settings'));
+    const other = await slack.ask('U_ANA', 'notification settings');
 
     await slack.click('U_ANA', slack.lastReply(other)!, 'Approve and open PR');
     assert.match(slack.textOf(slack.modal()), /Where should the PR go/);
@@ -63,6 +63,6 @@ describe('Picking the repo from a list', () => {
 
     assert.equal(web.pulls.length, 1);
     assert.equal(web.pulls[0].head, 'design/notification-settings');
-    assert.match(slack.textOf(slack.botReplies(other).find((m) => m.blocks)), /Approved by <@U_ANA>/);
+    assert.ok(slack.botReplies(other).some((m) => /Approved by <@U_ANA>/.test(slack.textOf(m))));
   });
 });
