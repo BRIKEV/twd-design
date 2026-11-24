@@ -11,7 +11,7 @@ platform that runs a container and keeps it on works. What changes between them 
 
 | | | |
 |---|---|---|
-| Image | `ghcr.io/brikev/twd-design:0.2.0` | linux/amd64 and linux/arm64 |
+| Image | `ghcr.io/brikev/twd-design:0.3.0` | linux/amd64 and linux/arm64 |
 | Resources | 512 MB of memory, 0.5 vCPU | 1 GB if several threads iterate at once |
 | Health check | `GET /healthz` on `PORT` (3000) | |
 | Stop | `SIGTERM`, then up to 60 s for running turns | Give the platform a grace period of 70 s |
@@ -22,7 +22,7 @@ restores the line breaks.
 ## Fly.io
 
 ```bash
-fly launch --image ghcr.io/brikev/twd-design:0.2.0 --no-deploy --vm-memory 512
+fly launch --image ghcr.io/brikev/twd-design:0.3.0 --no-deploy --vm-memory 512
 fly secrets import < .env
 fly deploy
 ```
@@ -33,7 +33,7 @@ connected to Slack.
 
 ## Railway
 
-New project → **Deploy a Docker image** → `ghcr.io/brikev/twd-design:0.2.0`. In the service's
+New project → **Deploy a Docker image** → `ghcr.io/brikev/twd-design:0.3.0`. In the service's
 **Variables**, open the **Raw Editor** and paste your `.env`.
 
 ## Kubernetes
@@ -56,7 +56,7 @@ spec:
       terminationGracePeriodSeconds: 70
       containers:
         - name: twd-design
-          image: ghcr.io/brikev/twd-design:0.2.0
+          image: ghcr.io/brikev/twd-design:0.3.0
           envFrom: [{ secretRef: { name: twd-design } }]
           resources:
             requests: { memory: 512Mi, cpu: 500m }

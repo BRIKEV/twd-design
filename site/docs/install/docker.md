@@ -44,7 +44,7 @@ docker run -d \
   ghcr.io/brikev/twd-design:latest
 ```
 
-The image is multi-arch (`linux/amd64`, `linux/arm64`). Pin a version (`:0.2.0`) in production instead
+The image is multi-arch (`linux/amd64`, `linux/arm64`). Pin a version (`:0.3.0`) in production instead
 of `latest`.
 
 ::: tip Until the first release

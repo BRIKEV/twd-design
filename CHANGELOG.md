@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The project follows [Se
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-24
+
+Image: `ghcr.io/brikev/twd-design:0.3.0`. Render services built from the Blueprint move to `:0.3` on their next sync.
+
 ### Added
 - The bot reads the linked repo's code (`list_repo_files`, `read_repo_file`, read only) before changing a
   screen that already exists, rebuilds it as it is and changes only what was asked. It skips `.env` files,
@@ -11,6 +15,9 @@ All notable changes to this project are documented here. The project follows [Se
   imports; a "Where things are" section in `DESIGN.md` says how the repo is organized; the DESIGN.md guide has a prompt to generate the file with your coding agent.
 - The docs are part of the site: design.twd.dev/docs, with search, sidebar and dark mode. They moved from
   `docs/` to `site/docs/`; the landing, the bot and the setup link to the site.
+- The site explains who it is for: agreeing on a screen before anyone builds it. New pages
+  [/why-not-v0-or-lovable](https://design.twd.dev/why-not-v0-or-lovable) and
+  [/companies](https://design.twd.dev/companies) (pilots, rollout, training).
 
 ## [0.2.0] - 2026-11-23
 
