@@ -92,6 +92,7 @@ export default defineConfig({
       { text: 'Docs', link: '/docs/', activeMatch: '^/docs/(?!guides)' },
       { text: 'Guides', link: '/docs/guides/working-in-slack', activeMatch: '^/docs/guides/' },
       { text: 'Why not v0?', link: '/why-not-v0-or-lovable' },
+      { text: 'For companies', link: '/companies' },
       { text: 'Changelog', link: `${REPO}/blob/main/CHANGELOG.md` },
     ],
     sidebar: {

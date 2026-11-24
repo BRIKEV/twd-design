@@ -162,6 +162,13 @@ The scripted model only replays decisions; whether the real model makes good one
   (`SHUTDOWN_TIMEOUT_MS`, 60 s) before exiting.
 - **State**: none. Restart, redeploy or scale down at any time; the threads hold everything.
 
+## Bringing it to your company?
+
+TWD Design is open source and stays that way. If you would rather not roll it out alone, write to
+hello@twd.dev: pilots with one team, deployment and security review, your design guide, training for
+product, design and development, and Microsoft Teams adapted to your company. See
+[design.twd.dev/companies](https://design.twd.dev/companies).
+
 ## License
 
 [MIT](LICENSE) © BRIKEV

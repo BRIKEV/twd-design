@@ -6,6 +6,7 @@ export const REPO = 'https://github.com/BRIKEV/twd-design'
 export const DOCS = '/docs/'
 export const INSTALL = '/docs/#install-about-15-minutes'
 export const COMPARE = '/why-not-v0-or-lovable'
+export const COMPANIES = '/companies'
 
 export const TITLE = 'TWD Design: agree on the screen before anyone builds it'
 export const DESCRIPTION =
@@ -39,6 +40,14 @@ export const FAQ: { q: string; a: string }[] = [
   {
     q: 'Which AI does it use?',
     a: 'The one you choose: Anthropic, OpenAI, Azure OpenAI, Google, Bedrock, Z.ai GLM or any other provider the Mastra model router supports.',
+  },
+  {
+    q: 'Does it work with Microsoft Teams?',
+    a: 'It works in Slack today. If your company works in Microsoft Teams, we adapt it to the way your teams use it: write to hello@twd.dev.',
+  },
+  {
+    q: 'Can you help us roll it out in our company?',
+    a: 'Yes. We run pilots with one team, deploy it with your security team, write your design guide with your designers and train product, design and development to use it. Write to hello@twd.dev.',
   },
   {
     q: 'What do developers need to set it up?',

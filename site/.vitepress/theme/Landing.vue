@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue'
-import { COMPARE, DOCS, FAQ, INSTALL, REPO } from '../content'
+import { COMPANIES, COMPARE, DOCS, FAQ, INSTALL, REPO } from '../content'
 import NotificationsDemo from './NotificationsDemo.vue'
 
 const doc = (path: string) => `/docs/${path.replace(/\.md$/, '')}`
@@ -319,6 +319,7 @@ Short and direct. "Save", not "Submit".</code></pre>
         <a class="btn primary" :href="INSTALL">Install TWD Design</a>
         <a class="btn" :href="REPO">Star it on GitHub</a>
       </div>
+      <p class="company">Bringing it to your company? <a :href="COMPANIES">We can help</a>.</p>
     </section>
   </main>
 
@@ -327,6 +328,6 @@ Short and direct. "Save", not "Submit".</code></pre>
       <img src="/twd-design-icon.png" alt="" width="20" height="20" />
       TWD Design is part of <a href="https://twd.dev">TWD</a>, by <a href="https://github.com/BRIKEV">BRIKEV</a>. MIT licensed.
     </p>
-    <p><a :href="REPO">GitHub</a> · <a :href="DOCS">Docs</a> · <a :href="COMPARE">Why not v0 or Lovable?</a></p>
+    <p><a :href="REPO">GitHub</a> · <a :href="DOCS">Docs</a> · <a :href="COMPARE">Why not v0 or Lovable?</a> · <a :href="COMPANIES">For companies</a></p>
   </footer>
 </template>

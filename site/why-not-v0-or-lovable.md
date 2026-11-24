@@ -75,9 +75,10 @@ against.
 - You are one person, or a very small team, and want a working app today.
 - You want a deployed app, not a prototype for your team to agree on.
 - Sending your product to a hosted service is not a problem for your company.
-- Your team doesn't use Slack. TWD Design works in Slack today, and Microsoft Teams is on the roadmap.
+- Your team doesn't use Slack, and you need something working today. TWD Design works in Slack; for
+  Microsoft Teams we [adapt it to your company](/companies).
 
 ## Try it
 
 TWD Design is open source. Your dev team sets it up in about 15 minutes:
-[start with the docs](/docs/).
+[start with the docs](/docs/). Bringing it to a whole company? [We can help](/companies).
