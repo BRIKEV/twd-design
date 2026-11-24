@@ -1,4 +1,4 @@
 ---
 layout: landing
-description: Ask in Slack how a screen would look. TWD Design answers with a clickable prototype in your design system, with acceptance criteria as TWD tests that already pass, and opens a pull request when the team agrees. Open source and self-hosted.
+description: A self-hosted Slack bot for product teams. Describe a screen and get a clickable prototype in your design system, with acceptance tests that already pass. When the team agrees, it opens a pull request. Open source, stores nothing.
 ---

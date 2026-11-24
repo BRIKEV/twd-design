@@ -5,12 +5,17 @@ export const SITE = 'https://design.twd.dev'
 export const REPO = 'https://github.com/BRIKEV/twd-design'
 export const DOCS = '/docs/'
 export const INSTALL = '/docs/#install-about-15-minutes'
+export const COMPARE = '/why-not-v0-or-lovable'
 
-export const TITLE = 'TWD Design: from a Slack thread to a prototype your team can click'
+export const TITLE = 'TWD Design: agree on the screen before anyone builds it'
 export const DESCRIPTION =
-  'Describe a screen in Slack and get a clickable prototype in your design system. Change it by replying, approve it, and developers get a pull request with the acceptance criteria already written. Open source and self-hosted.'
+  'A self-hosted Slack bot for product teams. Describe a screen and get a clickable prototype in your design system, with acceptance tests that already pass. When the team agrees, it opens a pull request. Open source, stores nothing, uses the AI your company approves.'
 
 export const FAQ: { q: string; a: string }[] = [
+  {
+    q: 'How is this different from v0 or Lovable?',
+    a: 'v0 and Lovable help one person build an app on their cloud. TWD Design helps product, design and development agree on a screen, on your own servers: it stores nothing, uses the AI your company already approves, follows your design system and ends in a pull request whose acceptance tests already pass.',
+  },
   {
     q: 'Do I need to know how to code?',
     a: 'No. You write in Slack the way you would brief a designer, and you review the prototype by clicking through it. The code is for the developers who build the feature.',

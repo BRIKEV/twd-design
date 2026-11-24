@@ -60,9 +60,9 @@ export default defineConfig({
     const path = pageData.relativePath.replace(/(^|\/)index\.md$/, '$1').replace(/\.md$/, '')
     const url = `${SITE}/${path}`
     const landing = pageData.relativePath === 'index.md'
-    const title = landing ? 'TWD Design: describe a screen, get a prototype your team can click' : `${pageData.title} · TWD Design`
+    const title = landing ? TITLE : `${pageData.title} · TWD Design`
     const description = landing
-      ? 'Ask in a Slack thread and get a working prototype in your design system. Change it by replying, approve it, and developers get a pull request. Open source and self-hosted.'
+      ? 'Agree on a screen in a Slack thread: a clickable prototype in your design system, acceptance tests that already pass, and a pull request. Self-hosted and open source.'
       : pageData.description || DESCRIPTION
     return [
       ['link', { rel: 'canonical', href: url }],
@@ -91,6 +91,7 @@ export default defineConfig({
     nav: [
       { text: 'Docs', link: '/docs/', activeMatch: '^/docs/(?!guides)' },
       { text: 'Guides', link: '/docs/guides/working-in-slack', activeMatch: '^/docs/guides/' },
+      { text: 'Why not v0?', link: '/why-not-v0-or-lovable' },
       { text: 'Changelog', link: `${REPO}/blob/main/CHANGELOG.md` },
     ],
     sidebar: {

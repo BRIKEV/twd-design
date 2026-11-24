@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue'
-import { DOCS, FAQ, INSTALL, REPO } from '../content'
+import { COMPARE, DOCS, FAQ, INSTALL, REPO } from '../content'
 import NotificationsDemo from './NotificationsDemo.vue'
 
 const doc = (path: string) => `/docs/${path.replace(/\.md$/, '')}`
@@ -96,12 +96,13 @@ async function copyInstall() {
     <!-- Hero -->
     <section class="hero">
       <div class="wrap hero-in">
-        <p class="eyebrow">An open-source Slack bot for product teams</p>
-        <h1>Describe a screen.<br /><span>Get a prototype your team can click.</span></h1>
+        <p class="eyebrow">Open source · Self-hosted · In your Slack</p>
+        <h1>Agree on the screen<br /><span>before anyone builds it.</span></h1>
         <p class="lede">
-          Ask in a Slack thread. TWD Design answers with a working prototype in your design system.
-          Change it by replying, approve it, and your developers get it in the repo with the acceptance
-          criteria already written.
+          Product, design and development describe a screen in a Slack thread and get a clickable
+          prototype in your design system, with acceptance tests that already pass. When the team agrees,
+          it lands in your repo as a pull request. It runs on your servers, uses the AI your company
+          already approves, and stores nothing.
         </p>
         <div class="ctas">
           <a class="btn primary" href="#demo">See it in action</a>
@@ -299,7 +300,7 @@ Short and direct. "Save", not "Submit".</code></pre>
           <a class="btn primary light" :href="INSTALL">Read the install guide</a>
           <button type="button" class="btn ghost" @click="copyInstall">{{ copied ? 'Link copied' : 'Copy the link for your dev team' }}</button>
         </div>
-        <p class="trust reveal"><a :href="doc('reference/security.md')">What is read, sent and stored</a> · Any AI provider, your key · MIT licensed</p>
+        <p class="trust reveal"><a :href="doc('reference/security.md')">What is read, sent and stored</a> · Any AI provider, your key · MIT licensed · <a :href="COMPARE">Why not v0 or Lovable?</a></p>
       </div>
     </section>
 
@@ -326,6 +327,6 @@ Short and direct. "Save", not "Submit".</code></pre>
       <img src="/twd-design-icon.png" alt="" width="20" height="20" />
       TWD Design is part of <a href="https://twd.dev">TWD</a>, by <a href="https://github.com/BRIKEV">BRIKEV</a>. MIT licensed.
     </p>
-    <p><a :href="REPO">GitHub</a> · <a :href="DOCS">Docs</a></p>
+    <p><a :href="REPO">GitHub</a> · <a :href="DOCS">Docs</a> · <a :href="COMPARE">Why not v0 or Lovable?</a></p>
   </footer>
 </template>
