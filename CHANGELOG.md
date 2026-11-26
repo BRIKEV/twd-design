@@ -16,6 +16,11 @@ All notable changes to this project are documented here. The project follows [Se
 - A syntax error in one of the prototype's scripts is reported with the script, the line and its code,
   before opening the browser: the browser alone says "missing ) after argument list" and runs nothing.
 - The skill spells out that the `twd.waitFor` callback isn't async: `getBy*` inside it, never `await`.
+- Test first: before writing a new version the model plans its scenarios with `plan_scenarios`, then writes
+  the page so every role, name and text they query exists. In the evals it ended green 9 of 9 times (7 of 9
+  writing the page first), with fewer fix rounds.
+- A control that shows a count keeps a fixed name (the count goes in an `aria-hidden` badge), and scenarios
+  check that a message shows up rather than its wording.
 - Scenarios check behavior, not copy: where a flow lands, the messages that show up and the state of
   controls, with at most one exact value when it is what the feature is about. Fake prices, names and long
   sentences stay out of them, so they don't fail on arithmetic and port cleanly to the real app.

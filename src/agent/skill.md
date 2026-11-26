@@ -35,6 +35,20 @@ The prototype is both the design and the spec: it carries TWD scenarios (accepta
   On later versions, the first line says what changed. Mark new or changed scenarios with `(new)`/`(changed)`.
   If no file changed (a question or approval), answer in 1–2 plain sentences without this template.
 
+## Scenarios first
+
+When a turn makes a new version, work test first, in this order:
+
+1. Read the code you need (see "The product's code").
+2. Call `plan_scenarios` with the full content of `<script id="scenarios">`: this version's acceptance
+   criteria as TWD scenarios, following the TWD rules. Here you decide the screens and routes, and the exact
+   role and name of every control and text the scenarios use.
+3. Write the page with `write_prototype` or `edit_prototype` so that every query in those scenarios matches:
+   each role, name and text exists exactly as written, each flow they walk works. Put the planned scenarios
+   in `<script id="scenarios">` verbatim; change one only if the page can't sensibly do what it says.
+
+For a question or an approval, plan nothing.
+
 ## The product's code
 
 When a repo is linked you can read it with `list_repo_files` and `read_repo_file`. The code is how the
@@ -106,6 +120,9 @@ every new prototype by adapting it, not from scratch:
 - Messages that appear after an action: `<p v-if="saved" role="status">Project added</p>`,
   `<p v-if="error" role="alert">{{ error }}</p>`.
 - Repeated controls get a unique accessible name: `:aria-label="`Delete ${item.name}`"`.
+- A control that shows a count (a cart or wishlist badge) keeps a fixed accessible name: put the count in an
+  `aria-hidden="true"` badge, `<a href="#/wishlist">Wishlist <span aria-hidden="true">{{ count }}</span></a>`,
+  so scenarios find `link "Wishlist"` whatever the count.
 - Modals are a `<dialog ref="...">` OUTSIDE `#app` (template ref: a `ref(null)` with the same name returned
   from `setup`), opened with `.value.showModal()`, with `aria-labelledby` its title, and controls whose names
   are unique on the page ("Yes, delete project", never a second "Delete").
@@ -178,7 +195,8 @@ repeated steps.
   data. Check:
   - where the flow lands: the next screen's heading, an item that appears in or leaves a list (by its role
     and name);
-  - that a message shows up: `findByRole('status' | 'alert')` with `'be.visible'`;
+  - that a message shows up: `findByRole('status' | 'alert')` with `'be.visible'`, not its wording
+    (`'have.text'` / `'contain.text'` on a message only when the thread agreed that exact wording);
   - the state of a control: `'be.disabled'` / `'be.enabled'`, `'have.attr', 'aria-checked', 'true'`.
 - At most ONE exact value per scenario, and only when it is what the feature is about (the total after a
   coupon, the count after a search). Never a value that only follows from fake data (another product's

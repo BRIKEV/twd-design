@@ -52,6 +52,22 @@ export function prototypeTools(state: PrototypeState, ctx: TurnContext) {
     },
   });
 
+  // Test first: the model commits to the scenarios (screens, routes, names) before it writes the page.
+  // In the evals this ended green 9 of 9 times, against 7 of 9 writing the page first.
+  const planScenarios = createTool({
+    id: 'plan_scenarios',
+    description:
+      'Before writing a new version, write its TWD scenarios: the full content of <script id="scenarios">. ' +
+      'Then write the page so every query in them matches, and put them in the page verbatim.',
+    inputSchema: z.object({
+      code: z.string().describe('The whole content of <script id="scenarios">: helpers plus function scenarios() { describe(...) }'),
+    }),
+    execute: async ({ code }) => {
+      state.calls.push(`plan:${(code.match(/\bit\(/g) ?? []).length}`);
+      return { ok: true, next: 'Now write the page so every role, name and text these scenarios query exists exactly as written, and every flow they walk works. Put them verbatim in <script id="scenarios">.' };
+    },
+  });
+
   const openPr = createTool({
     id: 'open_pull_request',
     description:
@@ -154,6 +170,7 @@ export function prototypeTools(state: PrototypeState, ctx: TurnContext) {
   return {
     write_prototype: writePrototype,
     edit_prototype: editPrototype,
+    plan_scenarios: planScenarios,
     open_pull_request: openPr,
     list_repo_files: listFiles,
     read_repo_file: readFile,
