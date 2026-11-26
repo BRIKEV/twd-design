@@ -15,10 +15,145 @@
     --color-success: #15803d;
     --radius-card: 0.5rem;
   }
-  [x-cloak] { display: none !important; }
+  [v-cloak] { display: none !important; }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/vue@3.5.45/dist/vue.global.prod.js"></script>
 </head>
 <body class="min-h-screen bg-gray-50 text-gray-900 antialiased">
+
+<!-- Vue mounts on #prototype, not #root: TWD's screenDom takes #root first, and the screen is <main id="app"> -->
+<div id="prototype" v-cloak>
+  <header class="sticky top-0 z-10 border-b border-gray-200 bg-white/80 backdrop-blur">
+    <div class="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
+      <span class="text-xl font-semibold">Projects</span>
+      <nav aria-label="Main" class="flex items-center gap-4 text-sm font-medium">
+        <div v-if="session" class="flex items-center gap-4">
+          <span class="text-gray-600">{{ session.name }}</span>
+          <button type="button" class="text-gray-700 hover:text-primary" @click="logout()">Log out</button>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main id="app" class="mx-auto max-w-5xl px-4 py-10 pb-20">
+
+    <!-- DEV: route /login · no session required; with a session, redirect to /projects -->
+    <section v-if="route.name === 'login'" class="mx-auto max-w-sm rounded-card bg-white p-6 shadow-md">
+      <h1 class="mb-6 text-2xl font-bold">Log in</h1>
+      <!-- DEV (proposed): POST /api/auth/login { email, password } → 200 + session · 401 wrong credentials -->
+      <form class="flex flex-col gap-4" @submit.prevent="login($event.target)">
+        <div>
+          <label for="login-email" class="mb-1 block text-sm font-medium">Email</label>
+          <input id="login-email" name="email" type="email" required autocomplete="email"
+                 class="w-full rounded-card border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary">
+        </div>
+        <div>
+          <label for="login-password" class="mb-1 block text-sm font-medium">Password</label>
+          <input id="login-password" name="password" type="password" required autocomplete="current-password"
+                 class="w-full rounded-card border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary">
+        </div>
+        <p v-if="loginError" role="alert" class="text-sm font-medium text-danger">{{ loginError }}</p>
+        <button type="submit" class="rounded-card bg-primary px-4 py-2 font-semibold text-white hover:bg-primary-hover">Log in</button>
+      </form>
+    </section>
+
+    <!-- DEV: route /projects · requires session -->
+    <section v-else-if="route.name === 'projects'" class="mx-auto max-w-2xl">
+      <div class="mb-6 flex items-center justify-between">
+        <h1 class="text-3xl font-bold">Your projects</h1>
+        <a href="#/new/details" class="rounded-card bg-primary px-4 py-2 font-semibold text-white hover:bg-primary-hover">New project</a>
+      </div>
+      <p v-if="notice" role="status" class="mb-4 text-sm font-medium text-success">{{ notice }}</p>
+
+      <label for="project-search" class="mb-1 block text-sm font-medium">Search projects</label>
+      <input id="project-search" v-model="search" type="search"
+             class="mb-2 w-full rounded-card border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary">
+      <p class="mb-4 text-sm text-gray-500">Showing {{ visibleProjects.length }} of {{ projects.length }} projects</p>
+
+      <!-- DEV (proposed): GET /api/projects?q= → [{ id, name, owner, tasks, done }] -->
+      <p v-if="visibleProjects.length === 0" class="text-gray-500">No projects match "{{ search }}".</p>
+      <ul v-else class="flex flex-col gap-3">
+        <li v-for="project in visibleProjects" :key="project.id" class="rounded-card bg-white p-4 shadow-md">
+          <h2 class="font-semibold"><a :href="`#/projects/${project.id}`" class="hover:text-primary">{{ project.name }}</a></h2>
+          <p class="text-sm text-gray-500">{{ project.done }} of {{ project.tasks }} tasks done</p>
+        </li>
+      </ul>
+    </section>
+
+    <!-- DEV: route /projects/:id · requires session -->
+    <section v-else-if="route.name === 'project'" class="mx-auto max-w-2xl">
+      <a href="#/projects" class="text-sm font-medium text-primary hover:underline">All projects</a>
+      <template v-if="currentProject">
+        <h1 class="mb-2 mt-4 text-3xl font-bold">{{ currentProject.name }}</h1>
+        <p class="text-gray-600">Owner: {{ currentProject.owner }}</p>
+        <p class="mb-8 text-gray-600">{{ currentProject.done }} of {{ currentProject.tasks }} tasks done</p>
+        <button type="button" class="rounded-card px-4 py-2 font-semibold text-danger hover:bg-red-50"
+                @click="deleteDialog.showModal()">Delete project</button>
+      </template>
+      <p v-else class="mt-4 text-gray-500">This project doesn't exist.</p>
+    </section>
+
+    <!-- DEV: route /projects/new · step 1 of 2 (the prototype splits the steps into /new/details and /new/review) -->
+    <section v-else-if="route.name === 'new-details'" class="mx-auto max-w-lg rounded-card bg-white p-6 shadow-md">
+      <p class="text-sm text-gray-500">Step 1 of 2</p>
+      <h1 class="mb-6 text-2xl font-bold">New project</h1>
+      <form class="flex flex-col gap-4" @submit.prevent="toReview()">
+        <div>
+          <label for="draft-name" class="mb-1 block text-sm font-medium">Project name</label>
+          <input id="draft-name" v-model="draft.name"
+                 class="w-full rounded-card border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary">
+        </div>
+        <div>
+          <label for="draft-description" class="mb-1 block text-sm font-medium">Description (optional)</label>
+          <textarea id="draft-description" v-model="draft.description" rows="3"
+                    class="w-full rounded-card border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"></textarea>
+        </div>
+        <p v-if="draftError" role="alert" class="text-sm font-medium text-danger">{{ draftError }}</p>
+        <div class="flex justify-end gap-2">
+          <a href="#/projects" class="rounded-card px-4 py-2 font-medium hover:bg-gray-100">Cancel</a>
+          <button type="submit" :disabled="!draft.name.trim()"
+                  class="rounded-card bg-primary px-4 py-2 font-semibold text-white hover:bg-primary-hover disabled:bg-gray-300">Continue</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- DEV: same route /projects/new · step 2 of 2 -->
+    <section v-else-if="route.name === 'new-review'" class="mx-auto max-w-lg rounded-card bg-white p-6 shadow-md">
+      <p class="text-sm text-gray-500">Step 2 of 2</p>
+      <h1 class="mb-6 text-2xl font-bold">Review</h1>
+      <p class="mb-2">Create {{ draft.name }} for {{ session?.name }}?</p>
+      <p class="mb-6 text-gray-600">{{ draft.description || 'No description.' }}</p>
+      <!-- DEV (proposed): POST /api/projects { name, description } → 201 project · 422 name too short -->
+      <div class="flex justify-end gap-2">
+        <button type="button" class="rounded-card px-4 py-2 font-medium hover:bg-gray-100" @click="navigate('/new/details')">Back</button>
+        <button type="button" class="rounded-card bg-primary px-4 py-2 font-semibold text-white hover:bg-primary-hover" @click="createProject()">Create project</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- Confirmation modal (outside #app: scenarios query it with screenDomGlobal) -->
+  <!-- DEV (proposed): DELETE /api/projects/:id → 204 -->
+  <dialog ref="deleteDialog" aria-labelledby="confirm-delete-title"
+          class="m-auto rounded-card p-6 shadow-lg backdrop:bg-black/40">
+    <h2 id="confirm-delete-title" class="mb-2 text-lg font-semibold">Delete project?</h2>
+    <p class="mb-6 text-gray-600">{{ currentProject?.name }} will be deleted for everyone.</p>
+    <div class="flex justify-end gap-2">
+      <button type="button" class="rounded-card px-4 py-2 font-medium hover:bg-gray-100"
+              @click="deleteDialog.close()">Cancel</button>
+      <button type="button" class="rounded-card bg-danger px-4 py-2 font-semibold text-white"
+              @click="deleteProject()">Yes, delete project</button>
+    </div>
+  </dialog>
+
+  <!-- PROTOTYPE ONLY: screen switcher for reviewers -->
+  <nav aria-label="Prototype screens"
+       class="fixed inset-x-0 bottom-0 flex flex-wrap items-center justify-center gap-4 bg-[#123956] px-4 py-2 text-sm text-gray-200">
+    <a v-for="screen in SCREENS" :key="screen.path" :href="`#${screen.path}`" class="hover:text-white">{{ screen.label }}</a>
+    <span class="ml-auto hidden text-xs text-[#9fd8da] sm:inline">
+      Prototype · tests by <a href="https://twd.dev" target="_blank" rel="noopener" class="underline hover:text-white">TWD</a>
+    </span>
+  </nav>
+</div>
 
 <script>
   // PROTOTYPE ONLY: scaffolding so this file works standalone (Slack preview or a browser tab).
@@ -35,203 +170,141 @@
     form.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true, submitter: btn }));
   }, true);
 
+  const { createApp, reactive, computed, ref, toRefs, nextTick } = Vue;
+
   // PROTOTYPE: fake data · DEV: users come from the auth service, projects from GET /api/projects
   const initialState = () => ({
     users: [{ email: 'ana@example.com', password: 'password123', name: 'Ana García' }],
     session: null,
     projects: [
-      { id: 'p1', name: 'Website redesign', owner: 'Ana García' },
-      { id: 'p2', name: 'Mobile app', owner: 'Luis Martín' },
+      { id: 'p1', name: 'Website redesign', owner: 'Ana García', tasks: 5, done: 3 },
+      { id: 'p2', name: 'Mobile app', owner: 'Luis Martín', tasks: 8, done: 8 },
     ],
+    search: '',
+    draft: { name: '', description: '' },
+    draftError: '',
     loginError: '',
-    saved: false,
-    pendingDelete: null,
+    notice: '',
   });
+  const state = reactive(initialState());
+  const deleteDialog = ref(null); // the <dialog ref="deleteDialog">
 
-  const ROUTES = ['login', 'projects'];
-  const parseRoute = () => {
-    const name = location.hash.replace('#/', '');
-    return ROUTES.includes(name) ? name : 'login';
-  };
+  // Hash router. Every screen, and every step of a flow, is its own route; :id is a parameter.
+  // Only the current screen is in the DOM (v-if).
+  const ROUTES = [
+    { name: 'login', path: '/login' },
+    { name: 'projects', path: '/projects', session: true },
+    { name: 'project', path: '/projects/:id', session: true },
+    { name: 'new-details', path: '/new/details', session: true },
+    { name: 'new-review', path: '/new/review', session: true },
+  ];
+  // One example path per screen: the "Prototype screens" bar links to them, and they are rendered to
+  // write the scenarios. Keep it in sync with ROUTES.
+  const SCREENS = [
+    { label: 'Log in', path: '/login' },
+    { label: 'Projects', path: '/projects' },
+    { label: 'Project', path: '/projects/p1' },
+    { label: 'New: details', path: '/new/details' },
+    { label: 'New: review', path: '/new/review' },
+  ];
+  const route = reactive({ name: '', params: {} });
 
-  document.addEventListener('alpine:init', () => {
-    Alpine.data('app', () => ({
-      ...initialState(),
-      route: 'login',
+  function matchRoute(path) {
+    for (const r of ROUTES) {
+      const keys = [];
+      const pattern = new RegExp(`^${r.path.replace(/:(\w+)/g, (_, key) => { keys.push(key); return '([^/]+)'; })}$`);
+      const m = path.match(pattern);
+      if (m) return { ...r, params: Object.fromEntries(keys.map((key, i) => [key, decodeURIComponent(m[i + 1])])) };
+    }
+    return null;
+  }
 
-      init() {
-        window.__app = this;
-        const go = () => this.navigate(parseRoute());
-        addEventListener('hashchange', go);
-        addEventListener('popstate', go); // twd.visit('#/route') uses pushState + popstate
-        go();
-      },
+  // Guards first, then the screen.
+  function navigate(path) {
+    const match = matchRoute(path);
+    if (!match) return navigate('/projects');
+    if (match.session && !state.session) return navigate('/login');
+    if (match.name === 'login' && state.session) return navigate('/projects');
+    if (match.name === 'new-review' && !state.draft.name.trim()) return navigate('/new/details');
+    if (location.hash !== `#${path}`) history.replaceState(null, '', `#${path}`);
+    route.name = match.name;
+    route.params = match.params;
+  }
+  const currentPath = () => location.hash.slice(1) || '/login';
+  addEventListener('hashchange', () => navigate(currentPath()));
+  addEventListener('popstate', () => navigate(currentPath())); // twd.visit('#/route') uses pushState + popstate
 
-      // Hash router with guards. Only the current screen is in the DOM (x-if).
-      navigate(name) {
-        if (name === 'projects' && !this.session) name = 'login';
-        if (name === 'login' && this.session) name = 'projects';
-        if (location.hash !== `#/${name}`) history.replaceState(null, '', `#/${name}`);
-        this.route = name;
-      },
+  const visibleProjects = computed(() =>
+    state.projects.filter((p) => p.name.toLowerCase().includes(state.search.trim().toLowerCase())));
+  const currentProject = computed(() => state.projects.find((p) => p.id === route.params.id));
 
-      login(form) {
-        const { email, password } = Object.fromEntries(new FormData(form));
-        const user = this.users.find((u) => u.email === email && u.password === password);
-        if (!user) { this.loginError = 'Wrong email or password.'; return; }
-        this.loginError = '';
-        this.session = { name: user.name, email: user.email };
-        this.navigate('projects');
-      },
+  function login(form) {
+    const { email, password } = Object.fromEntries(new FormData(form));
+    const user = state.users.find((u) => u.email === email && u.password === password);
+    if (!user) { state.loginError = 'Wrong email or password.'; return; }
+    state.loginError = '';
+    state.session = { name: user.name, email: user.email };
+    navigate('/projects');
+  }
 
-      logout() {
-        this.session = null;
-        this.navigate('login');
-      },
+  function logout() {
+    state.session = null;
+    navigate('/login');
+  }
 
-      addProject(form) {
-        const name = new FormData(form).get('name').trim();
-        if (!name) return;
-        this.projects.push({ id: crypto.randomUUID(), name, owner: this.session.name });
-        this.saved = true;
-        form.reset();
-      },
+  // Length rules are checked here: browsers don't check minlength on text typed by a scenario.
+  function toReview() {
+    if (state.draft.name.trim().length < 3) { state.draftError = 'Use at least 3 characters.'; return; }
+    state.draftError = '';
+    navigate('/new/review');
+  }
 
-      askDelete(project) {
-        this.pendingDelete = project;
-        this.$refs.confirmDelete.showModal();
-      },
+  function createProject() {
+    const name = state.draft.name.trim();
+    state.projects.push({ id: crypto.randomUUID(), name, owner: state.session.name, tasks: 0, done: 0 });
+    state.draft = { name: '', description: '' };
+    state.notice = `${name} added`;
+    navigate('/projects');
+  }
 
-      confirmDelete() {
-        this.projects = this.projects.filter((p) => p.id !== this.pendingDelete.id);
-        this.pendingDelete = null;
-        this.$refs.confirmDelete.close();
-      },
-    }));
-  });
+  function deleteProject() {
+    const { id, name } = currentProject.value;
+    state.projects = state.projects.filter((p) => p.id !== id);
+    state.notice = `${name} deleted`;
+    deleteDialog.value.close();
+    navigate('/projects');
+  }
+
+  createApp({
+    setup: () => ({
+      ...toRefs(state), route, SCREENS, deleteDialog, visibleProjects, currentProject,
+      navigate, login, logout, toReview, createProject, deleteProject,
+    }),
+  }).mount('#prototype');
+  navigate(currentPath());
 
   // Scenarios await this in beforeEach so every scenario starts from the same state. It unmounts the
-  // current screen before mounting the first one again: x-if keeps a screen (and whatever was typed in
+  // current screen before mounting the first one again: v-if keeps a screen (and whatever was typed in
   // its inputs) if the route doesn't change.
   async function resetApp() {
-    const app = window.__app;
     document.querySelectorAll('dialog[open]').forEach((d) => d.close());
-    Object.assign(app, initialState());
-    app.route = '';
-    await Alpine.nextTick();
+    Object.assign(state, initialState());
+    route.name = '';
+    await nextTick();
     history.replaceState(null, '', '#/login');
-    app.navigate('login');
-    await Alpine.nextTick();
+    navigate('/login');
+    await nextTick();
   }
 </script>
-<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.17.5/dist/cdn.min.js"></script>
-
-<div x-data="app" x-cloak>
-  <header class="sticky top-0 z-10 border-b border-gray-200 bg-white/80 backdrop-blur">
-    <div class="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
-      <span class="text-xl font-semibold">Projects</span>
-      <nav aria-label="Main" class="flex items-center gap-4 text-sm font-medium">
-        <template x-if="session">
-          <div class="flex items-center gap-4">
-            <span class="text-gray-600" x-text="session.name"></span>
-            <button type="button" class="text-gray-700 hover:text-primary" @click="logout()">Log out</button>
-          </div>
-        </template>
-      </nav>
-    </div>
-  </header>
-
-  <main id="app" class="mx-auto max-w-5xl px-4 py-10">
-
-    <!-- DEV: route /login · no session required; with a session, redirect to /projects -->
-    <template x-if="route === 'login'">
-      <section class="mx-auto max-w-sm rounded-card bg-white p-6 shadow-md">
-        <h1 class="mb-6 text-2xl font-bold">Log in</h1>
-        <!-- DEV (proposed): POST /api/auth/login { email, password } → 200 + session · 401 wrong credentials -->
-        <form class="flex flex-col gap-4" @submit.prevent="login($el)">
-          <div>
-            <label for="login-email" class="mb-1 block text-sm font-medium">Email</label>
-            <input id="login-email" name="email" type="email" required autocomplete="email"
-                   class="w-full rounded-card border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary">
-          </div>
-          <div>
-            <label for="login-password" class="mb-1 block text-sm font-medium">Password</label>
-            <input id="login-password" name="password" type="password" required autocomplete="current-password"
-                   class="w-full rounded-card border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary">
-          </div>
-          <p role="alert" class="text-sm font-medium text-danger" x-show="loginError" x-text="loginError"></p>
-          <button type="submit" class="rounded-card bg-primary px-4 py-2 font-semibold text-white hover:bg-primary-hover">Log in</button>
-        </form>
-      </section>
-    </template>
-
-    <!-- DEV: route /projects · requires session, else redirect to /login -->
-    <template x-if="route === 'projects'">
-      <section class="mx-auto max-w-2xl">
-        <h1 class="mb-8 text-3xl font-bold">Your projects</h1>
-
-        <!-- DEV (proposed): POST /api/projects { name } → 201 project · 422 empty name -->
-        <form class="mb-8 flex gap-2" @submit.prevent="addProject($el)">
-          <label for="project-name" class="sr-only">Project name</label>
-          <input id="project-name" name="name" required placeholder="New project name"
-                 class="flex-1 rounded-card border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary">
-          <button type="submit" class="rounded-card bg-primary px-4 py-2 font-semibold text-white hover:bg-primary-hover">Add project</button>
-        </form>
-        <p role="status" class="-mt-6 mb-6 text-sm font-medium text-success" x-show="saved">Project added</p>
-
-        <!-- DEV: empty state when the user has no projects -->
-        <p class="text-gray-500" x-show="projects.length === 0">No projects yet.</p>
-        <p class="mb-2 text-sm text-gray-500" x-show="projects.length" x-text="`${projects.length} projects`"></p>
-
-        <!-- DEV (proposed): GET /api/projects → [{ id, name, owner }] -->
-        <ul class="flex flex-col gap-3">
-          <template x-for="project in projects" :key="project.id">
-            <li class="flex items-center justify-between rounded-card bg-white p-4 shadow-md">
-              <div>
-                <h2 class="font-semibold" x-text="project.name"></h2>
-                <p class="text-sm text-gray-500" x-text="`Owner: ${project.owner}`"></p>
-              </div>
-              <button type="button" class="rounded px-3 py-1 text-sm font-semibold text-danger hover:bg-red-50"
-                      :aria-label="`Delete ${project.name}`" @click="askDelete(project)">Delete</button>
-            </li>
-          </template>
-        </ul>
-      </section>
-    </template>
-  </main>
-
-  <!-- Confirmation modal (outside #app: scenarios query it with screenDomGlobal) -->
-  <!-- DEV (proposed): DELETE /api/projects/:id → 204 -->
-  <dialog x-ref="confirmDelete" aria-labelledby="confirm-delete-title"
-          class="m-auto rounded-card p-6 shadow-lg backdrop:bg-black/40">
-    <h2 id="confirm-delete-title" class="mb-2 text-lg font-semibold">Delete project?</h2>
-    <p class="mb-6 text-gray-600">
-      <span x-text="pendingDelete?.name"></span> will be deleted for everyone.
-    </p>
-    <div class="flex justify-end gap-2">
-      <button type="button" class="rounded-card px-4 py-2 font-medium hover:bg-gray-100"
-              @click="$refs.confirmDelete.close()">Cancel</button>
-      <button type="button" class="rounded-card bg-danger px-4 py-2 font-semibold text-white"
-              @click="confirmDelete()">Yes, delete project</button>
-    </div>
-  </dialog>
-
-  <!-- PROTOTYPE ONLY: screen switcher for reviewers -->
-  <nav aria-label="Prototype screens"
-       class="fixed inset-x-0 bottom-0 flex items-center justify-center gap-4 bg-[#123956] px-4 py-2 text-sm text-gray-200">
-    <a href="#/login" class="hover:text-white">Log in</a>
-    <a href="#/projects" class="hover:text-white">Projects</a>
-    <span class="ml-auto hidden text-xs text-[#9fd8da] sm:inline">
-      Prototype · tests by <a href="https://twd.dev" target="_blank" rel="noopener" class="underline hover:text-white">TWD</a>
-    </span>
-  </nav>
-</div>
 
 <script src="https://cdn.jsdelivr.net/npm/twd-js@1.14.0/dist/twd.global.js"></script>
 <script>
   sessionStorage.setItem('twd-pace', sessionStorage.getItem('twd-pace') || '600');
   const { initTWD, describe, it, beforeEach, twd, userEvent, screenDom, screenDomGlobal, expect } = window.TWD;
+</script>
 
+<!-- TWD scenarios: written after the page, against what each screen shows once rendered -->
+<script id="scenarios">
   async function logIn(user) {
     await user.type(await screenDom.findByLabelText('Email'), 'ana@example.com');
     await user.type(await screenDom.findByLabelText('Password'), 'password123');
@@ -239,54 +312,68 @@
     await screenDom.findByRole('heading', { name: 'Your projects' });
   }
 
+  function scenarios() {
+    describe('Projects', () => {
+      beforeEach(() => resetApp());
+
+      it('logs in and sees their projects', async () => {
+        const user = userEvent.setup();
+        await logIn(user);
+        twd.should(await screenDom.findByText('Showing 2 of 2 projects'), 'be.visible');
+        twd.should(await screenDom.findByRole('link', { name: 'Website redesign' }), 'be.visible');
+        twd.should(await screenDom.findByText('3 of 5 tasks done'), 'be.visible');
+      });
+
+      it('shows an error with wrong credentials', async () => {
+        const user = userEvent.setup();
+        await user.type(await screenDom.findByLabelText('Email'), 'ana@example.com');
+        await user.type(await screenDom.findByLabelText('Password'), 'nope');
+        await user.click(await screenDom.findByRole('button', { name: 'Log in' }));
+        twd.should(await screenDom.findByRole('alert'), 'have.text', 'Wrong email or password.');
+      });
+
+      it('creates a project in two steps', async () => {
+        const user = userEvent.setup();
+        await logIn(user);
+        await user.click(await screenDom.findByRole('link', { name: 'New project' }));
+        twd.should(await screenDom.findByRole('button', { name: 'Continue' }), 'be.disabled');
+        await user.type(await screenDom.findByLabelText('Project name'), 'AB');
+        await user.click(await screenDom.findByRole('button', { name: 'Continue' }));
+        twd.should(await screenDom.findByRole('alert'), 'have.text', 'Use at least 3 characters.');
+        await user.type(await screenDom.findByLabelText('Project name'), 'C billing');
+        await user.click(await screenDom.findByRole('button', { name: 'Continue' }));
+        twd.should(await screenDom.findByText('Create ABC billing for Ana García?'), 'be.visible');
+        await user.click(await screenDom.findByRole('button', { name: 'Create project' }));
+        twd.should(await screenDom.findByRole('status'), 'have.text', 'ABC billing added');
+        twd.should(await screenDom.findByText('Showing 3 of 3 projects'), 'be.visible');
+      });
+
+      it('finds a project and deletes it after confirming', async () => {
+        const user = userEvent.setup();
+        await logIn(user);
+        await user.type(await screenDom.findByLabelText('Search projects'), 'mob');
+        twd.should(await screenDom.findByText('Showing 1 of 2 projects'), 'be.visible');
+        await user.click(await screenDom.findByRole('link', { name: 'Mobile app' }));
+        twd.should(await screenDom.findByText('8 of 8 tasks done'), 'be.visible');
+        await user.click(await screenDom.findByRole('button', { name: 'Delete project' }));
+        twd.should(await screenDomGlobal.findByText('Mobile app will be deleted for everyone.'), 'be.visible');
+        await user.click(await screenDomGlobal.findByRole('button', { name: 'Yes, delete project' }));
+        twd.should(await screenDom.findByRole('status'), 'have.text', 'Mobile app deleted');
+        twd.should(await screenDom.findByText('Showing 0 of 1 projects'), 'be.visible');
+        twd.should(await screenDom.findByText('No projects match "mob".'), 'be.visible');
+      });
+
+      it('sends visitors without a session to log in', async () => {
+        await twd.visit('#/projects/p1');
+        twd.should(await screenDom.findByRole('heading', { name: 'Log in' }), 'be.visible');
+      });
+    });
+  }
+</script>
+
+<script>
   initTWD(
-    {
-      scenarios: async () => {
-        describe('Projects', () => {
-          beforeEach(() => resetApp());
-
-          it('logs in and sees their projects', async () => {
-            const user = userEvent.setup();
-            await logIn(user);
-            twd.should(await screenDom.findByText('2 projects'), 'be.visible');
-            twd.should(await screenDom.findByRole('heading', { name: 'Website redesign' }), 'be.visible');
-          });
-
-          it('shows an error with wrong credentials', async () => {
-            const user = userEvent.setup();
-            await user.type(await screenDom.findByLabelText('Email'), 'ana@example.com');
-            await user.type(await screenDom.findByLabelText('Password'), 'nope');
-            await user.click(await screenDom.findByRole('button', { name: 'Log in' }));
-            twd.should(await screenDom.findByRole('alert'), 'have.text', 'Wrong email or password.');
-          });
-
-          it('adds a project', async () => {
-            const user = userEvent.setup();
-            await logIn(user);
-            await user.type(await screenDom.findByLabelText('Project name'), 'Billing');
-            await user.click(await screenDom.findByRole('button', { name: 'Add project' }));
-            twd.should(await screenDom.findByRole('heading', { name: 'Billing' }), 'be.visible');
-            twd.should(await screenDom.findByRole('status'), 'have.text', 'Project added');
-            twd.should(await screenDom.findByText('3 projects'), 'be.visible');
-          });
-
-          it('deletes a project after confirming', async () => {
-            const user = userEvent.setup();
-            await logIn(user);
-            await user.click(await screenDom.findByRole('button', { name: 'Delete Mobile app' }));
-            await screenDomGlobal.findByRole('dialog', { name: 'Delete project?' });
-            await user.click(await screenDomGlobal.findByRole('button', { name: 'Yes, delete project' }));
-            twd.should(await screenDom.findByText('1 projects'), 'be.visible');
-            expect(screenDom.queryByRole('heading', { name: 'Mobile app' })).to.equal(null);
-          });
-
-          it('sends visitors without a session to log in', async () => {
-            await twd.visit('#/projects');
-            twd.should(await screenDom.findByRole('heading', { name: 'Log in' }), 'be.visible');
-          });
-        });
-      },
-    },
+    { scenarios: async () => scenarios() },
     { open: false, serviceWorker: false, search: true, pace: true },
   );
 </script>

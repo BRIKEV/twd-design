@@ -87,7 +87,7 @@ write it from the code. Run this prompt in the product repo, then review the res
 
 ```text
 Create design/DESIGN.md: a design guide that another AI will read to build HTML prototypes (Tailwind and
-Alpine.js) that look and behave like this product. It is sent on every request, so keep it to 2–15 KB.
+Vue) that look and behave like this product. It is sent on every request, so keep it to 2–15 KB.
 
 Read the code, not your assumptions: the styles, the Tailwind config or CSS variables, the shared UI
 components, the router and the main pages. If there is a CLAUDE.md, AGENTS.md or README, use it.

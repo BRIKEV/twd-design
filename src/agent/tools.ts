@@ -52,6 +52,36 @@ export function prototypeTools(state: PrototypeState, ctx: TurnContext) {
     },
   });
 
+  // Scenarios are written after the page, against what each screen shows once rendered. They live in
+  // their own <script id="scenarios">, so rewriting them never touches the page.
+  const writeScenarios = createTool({
+    id: 'write_scenarios',
+    description:
+      'Replace the TWD scenarios of the current prototype: everything inside <script id="scenarios">. ' +
+      'Write them against the screens you were shown, with the names and texts exactly as listed.',
+    inputSchema: z.object({
+      code: z.string().describe('The whole content of <script id="scenarios">: helpers plus function scenarios() { describe(...) }'),
+    }),
+    execute: async ({ code }) => {
+      if (state.html == null) {
+        state.calls.push('scenarios:no-prototype');
+        return { ok: false, error: 'No prototype yet. Write the page with write_prototype first.' };
+      }
+      if (!SCENARIOS_BLOCK.test(state.html)) {
+        state.calls.push('scenarios:no-block');
+        return { ok: false, error: 'This prototype has no <script id="scenarios"> block (it was made before scenarios had their own block). Change its scenarios with edit_prototype.' };
+      }
+      if (!/function\s+scenarios\s*\(/.test(code)) {
+        state.calls.push('scenarios:no-function');
+        return { ok: false, error: 'The code must define function scenarios() { describe(...) }: initTWD calls it.' };
+      }
+      state.html = state.html.replace(SCENARIOS_BLOCK, (_m, open: string, _old: string, close: string) => `${open}\n${code.trim()}\n${close}`);
+      state.changed = true;
+      state.calls.push(`scenarios:${(code.match(/\bit\(/g) ?? []).length}`);
+      return { ok: true };
+    },
+  });
+
   const openPr = createTool({
     id: 'open_pull_request',
     description:
@@ -153,11 +183,14 @@ export function prototypeTools(state: PrototypeState, ctx: TurnContext) {
   return {
     write_prototype: writePrototype,
     edit_prototype: editPrototype,
+    write_scenarios: writeScenarios,
     open_pull_request: openPr,
     list_repo_files: listFiles,
     read_repo_file: readFile,
   };
 }
+
+const SCENARIOS_BLOCK = /(<script id="scenarios">)([\s\S]*?)(<\/script>)/;
 
 /** Per file read: a big page and its components fit, a lockfile or a bundle doesn't flood the model. */
 const MAX_READ = 40_000;

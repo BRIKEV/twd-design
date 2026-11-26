@@ -5,8 +5,8 @@ Primary color: #e4572e (buttons, links). Font: Inter. Every destructive action n
 
 export const LOGIN_V1 = `<!doctype html>
 <html><body class="font-[Inter]">
-  <main x-data="app()">
-    <form @submit.prevent="login()">
+  <main id="root">
+    <form @submit.prevent="login($event.target)">
       <label>Email <input type="email" required></label>
       <button class="bg-[#e4572e]">Log in</button>
     </form>

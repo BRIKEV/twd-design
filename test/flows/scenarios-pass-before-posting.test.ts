@@ -9,7 +9,7 @@ import { fakeFetch } from '../helpers/fake-fetch.ts';
 import { decide, scriptedModel } from '../helpers/scripted-model.ts';
 import { slackWorkspace } from '../helpers/slack-workspace.ts';
 
-const BROKEN = `<main x-data="app"><button role="switch" aria-checked="true">Email</button></main>
+const BROKEN = `<main id="app"><button role="switch" aria-checked="true">Email</button></main>
 <script>it('email is on', async () => { twd.should(await screenDom.findByRole('switch'), 'be.checked'); });</script>`;
 const FIXED_ASSERT = `'have.attr', 'aria-checked', 'true'`;
 

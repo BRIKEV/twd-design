@@ -75,6 +75,7 @@ and finds the installation for that repo by itself.
 | `MAX_TURNS_PER_THREAD` | `15` | After this many bot replies, the thread asks you to start a new one. Caps cost per thread. |
 | `SHUTDOWN_TIMEOUT_MS` | `60000` | On `SIGTERM`, how long to wait for running turns before exiting. |
 | `SCENARIO_CHECK` | on | Each new version's TWD scenarios run in headless Chrome before it is posted; failures go back to the model to fix (up to 2 rounds). `off` skips it, for example where no browser can run. The Docker image includes Chromium; outside Docker, Puppeteer's own Chrome is used. |
+| `SCREENS_STEP` | on | With the scenario check on, each new version is rendered first and the model writes its scenarios against what every screen shows, in a second call. `off` writes page and scenarios in one call. |
 
 ## Health and logs
 

@@ -60,35 +60,56 @@ product really is today; prototypes in `design/prototypes/` only show what was o
 The reference template at the end is a working prototype (its scenarios pass in Slack's preview). Build
 every new prototype by adapting it, not from scratch:
 
-- **Keep verbatim**: the form-submission shim, the `alpine:init` / `Alpine.data('app')` structure, the hash
-  router (`ROUTES`, `parseRoute`, `navigate`, the `hashchange` + `popstate` listeners), `resetApp()`, the
-  script tags and versions, the TWD setup (pace, options, `beforeEach(() => resetApp())`), and the
-  "Prototype screens" bar's look and its "Prototype · tests by TWD" mark (change only its route links).
-  The bar is scaffolding: it keeps TWD's colors even when the product's design guide uses others.
+- **Keep verbatim**: the form-submission shim, the Vue structure (`initialState()`, `state`, `route`,
+  `createApp({ setup })` mounted on `#prototype`, never `#root`), the hash router (`ROUTES`, `SCREENS`,
+  `matchRoute`, `navigate`, `currentPath`, the `hashchange` + `popstate` listeners), `resetApp()`, the script
+  tags and versions, the TWD setup (the `<script id="scenarios">` block with `function scenarios()`, pace,
+  `initTWD` options, `beforeEach(() => resetApp())`), and the "Prototype screens" bar's look and its
+  "Prototype · tests by TWD" mark. The bar is scaffolding: it keeps TWD's colors even when the product's
+  design guide uses others.
 - **Replace**: the domain (screens, state, fake data, actions), the copy, the `@theme` tokens, the
   `DEV:` comments and the scenarios.
-- Stack: **Alpine.js** for behavior and **Tailwind** (browser build) for styling, both from jsDelivr, exactly
-  the versions in the template. No other libraries.
+- Stack: **Vue 3** (global build, templates written in the HTML) for behavior and **Tailwind** (browser
+  build) for styling, both from jsDelivr, exactly the versions in the template. No other libraries, no
+  `.vue` files, no components: one template inside `#prototype`.
 - One self-contained `.html` file, no build step, no modules, no import maps, no network requests.
 
-## Alpine rules
+## Vue rules
 
-- All state lives in `Alpine.data('app')`, seeded from `initialState()`. The DOM is a function of state:
+- All state lives in `state`, seeded from `initialState()`, plus `route`. The DOM is a function of state:
   never build HTML strings or touch the DOM by hand (no `innerHTML`, no `querySelector` in app code).
-- One `<template x-if="route === '<name>'">` per screen inside `<main id="app">`, so ONLY the current screen
-  exists in the DOM (hidden screens would make Testing Library find duplicates). Add each route to `ROUTES`
-  and guard it in `navigate` when it needs a session.
-- Navigate with links to `#/<route>` or by calling `navigate('<route>')`.
-- Dynamic text with `x-text`, lists with `x-for` + `:key`, conditional pieces with `x-show`.
-- Forms: a normal `<form>` with `@submit.prevent="action($el)"`, `type="submit"` buttons, native validation
-  (`required`, `type="email"`, `minlength`) and `new FormData(form)` to read values.
-- Messages that appear after an action keep their text in the markup and only toggle visibility:
-  `<p role="status" x-show="saved">Project added</p>`, `<p role="alert" x-show="error" x-text="error"></p>`.
+  Actions are plain functions that change `state`; return every one from `setup` so the template sees it.
+- Every screen AND every step of a flow (cart → checkout → done, details → review) is its own route in
+  `ROUTES`, never a `step` variable inside one screen. A detail screen takes a parameter (`/projects/:id`,
+  read as `route.params.id`). Guard routes in `navigate` (a session, a draft that must exist first).
+- Add one example path per screen to `SCREENS`, in `ROUTES` order: the "Prototype screens" bar links to
+  them, and the bot renders each one to write the scenarios.
+- One `<section v-if="route.name === '<name>'">` (then `v-else-if`) per route inside `<main id="app">`, so
+  ONLY the current screen exists in the DOM. Keep `<main id="app">`: it is the screen scenarios query.
+- Navigate with links to `#/<path>` or by calling `navigate('/<path>')`.
+- An input the UI reacts to while typing (a button enabled once there is text, a live search, a total)
+  uses `v-model` on state. A form that is only read on submit can use `new FormData(form)`.
+- Text with `{{ }}` inside the element that holds the whole sentence: `<p>{{ count }} items · {{ price(total) }}</p>`,
+  `<p>Charged {{ price(order.total) }}. A receipt is on its way.</p>`. Never split a sentence into `<span>`s:
+  Testing Library finds text inside one element.
+- Lists with `v-for` + `:key`. Anything conditional with `v-if` / `v-else`, never `v-show`: what isn't shown
+  isn't in the DOM, so queries never find hidden elements.
+- Forms: a normal `<form>` with `@submit.prevent="action($event.target)"`, `type="submit"` buttons, native
+  validation (`required`, `type="email"`) and `new FormData(form)` to read values. Browsers don't check
+  `minlength`/`maxlength`/`pattern` on text typed by a scenario: validate those in the action and show a
+  `role="alert"` message.
+- Messages that appear after an action: `<p v-if="saved" role="status">Project added</p>`,
+  `<p v-if="error" role="alert">{{ error }}</p>`.
 - Repeated controls get a unique accessible name: `:aria-label="`Delete ${item.name}`"`.
-- Modals are a `<dialog x-ref="...">` OUTSIDE `#app`, opened with `this.$refs.x.showModal()`, with
-  `aria-labelledby` its title, and controls whose names are unique on the page ("Yes, delete project",
-  never a second "Delete").
+- Modals are a `<dialog ref="...">` OUTSIDE `#app` (template ref: a `ref(null)` with the same name returned
+  from `setup`), opened with `.value.showModal()`, with `aria-labelledby` its title, and controls whose names
+  are unique on the page ("Yes, delete project", never a second "Delete").
+- The template is parsed by the browser first: attributes in kebab-case, no self-closing tags, and no `<`
+  inside `{{ }}` in text (use a function or a computed value).
 - If you add new state that a screen mutates, it must be part of `initialState()` so `resetApp()` restores it.
+- The prototype starts ready: `initialState()` holds the loaded data, never a `'loading'` state that waits for
+  something to load it. No `setTimeout` delays to fake latency. Loading, error and empty states are shown
+  only when an action leads to them (or in a `DEV:` comment), so a scenario can reach them on purpose.
 
 ## Tailwind rules
 
@@ -106,7 +127,7 @@ Slack shows the file in a sandboxed iframe with a strict CSP.
 
 - **Works**: `sessionStorage`/`localStorage`, hash routing and `pushState`, `<dialog>.showModal()`,
   `crypto.randomUUID`, inline SVG and `data:` images, Google Fonts, and scripts from `cdn.jsdelivr.net`
-  (TWD, Alpine, Tailwind).
+  (TWD, Vue, Tailwind).
 - **Blocked**, never use them:
   - Form submission: handled by the template's shim, keep it.
   - `alert()`, `confirm()`, `prompt()`: use a `<dialog>` or an inline message.
@@ -139,9 +160,11 @@ must be impossible to confuse:
 
 ## TWD scenarios (required)
 
-Keep the template's TWD block (script at the end of `<body>`, pace `'600'`, options
-`{ open: false, serviceWorker: false, search: true, pace: true }`, `beforeEach(() => resetApp())`) and write
-new scenarios in the same style. A small helper like the template's `logIn(user)` is fine for repeated steps.
+Keep the template's TWD block (scripts at the end of `<body>`, pace `'600'`, options
+`{ open: false, serviceWorker: false, search: true, pace: true }`). The scenarios live in
+`<script id="scenarios">`: helpers plus `function scenarios() { describe(...) }` with
+`beforeEach(() => resetApp())`, in the template's style. A small helper like `logIn(user)` is fine for
+repeated steps.
 
 - 3–5 flow-based scenarios that read like acceptance criteria. Each one does something (find → act with
   `userEvent` → assert), with several assertions telling a story. At most one plain "shows X" check.
@@ -161,7 +184,7 @@ new scenarios in the same style. A small helper like the template's `logIn(user)
 
   | Assertion | Passes when |
   |---|---|
-  | `'be.visible'` | the element is rendered and not hidden (`x-show` false hides it) |
+  | `'be.visible'` | the element is rendered and not hidden |
   | `'have.text', t` / `'contain.text', t` | its text is exactly / contains `t` |
   | `'have.value', v` | an `<input>`, `<select>` or `<textarea>` has value `v` |
   | `'be.checked'` | a native `<input type="checkbox">` or `radio` is checked. NOT for `role="switch"` or other ARIA widgets: use `'have.attr', 'aria-checked', 'true'` |
@@ -171,19 +194,21 @@ new scenarios in the same style. A small helper like the template's `logIn(user)
 
   `expect` is plain Chai with no DOM plugin (`expect(el).to.have.value` does not exist); use it only for plain
   values. Never Jest matchers.
-- Alpine traps, from failures we have seen:
-  - `x-show` hides an element but keeps it in the DOM. `queryByText` still finds it, so "gone" is
-    `twd.should(el, 'not.be.visible')`, never `queryBy… === null`. `queryBy… === null` is only for elements
-    removed with `x-if`. For a message that appears after an action (saved, error, empty state), prefer
-    `findByRole('status' | 'alert')`: role queries skip hidden elements, so it waits until it shows.
-  - Alpine updates the DOM right after the event, not inside it. Never assert an element you already hold
-    right after a click: query again with the new state, or use `twd.waitFor`.
-  - A toggle button needs `role="switch"` and `:aria-checked="value.toString()"`, and is asserted with
+- Traps, from failures we have seen:
+  - Vue updates the DOM after the event, not inside it. Never assert an element you already hold right
+    after a click: query again with the new state, or use `twd.waitFor`.
+  - "Gone" is `expect(screenDom.queryBy…(…)).to.equal(null)` after `await twd.waitFor(...)` or a `findBy*`
+    of the new state: with `v-if` the element leaves the DOM.
+  - A toggle button needs `role="switch"` and `:aria-checked="String(value)"`, and is asserted with
     `'have.attr', 'aria-checked', 'true' | 'false'`.
-- `findBy*` throws when several elements match: rely on the unique accessible names from the Alpine rules.
-  `within` is not available.
-- Every name or text a scenario queries must exist exactly in the markup or be produced by `x-text`.
-  Check each one before you finish.
+- `findBy*` throws when several elements match: rely on the unique accessible names from the Vue rules.
+  `within` is not available. A bare number or price repeats on a screen (line, subtotal, total): never query
+  it alone; put its label in the same element (`<p>Total {{ price(total) }}</p>`) and query that text.
+- `aria-label` names controls (buttons, links, inputs) for `findByRole(role, { name })`; it is not text.
+  A counter or badge a scenario checks needs visible text (`<span>{{ count }} items</span>`), found with
+  `findByText`.
+- `findByText` matches the whole text of ONE element. Every name or text a scenario queries must be exactly
+  what one element shows once rendered. Check each one before you finish.
 - Scenarios run at a desktop size by default. Only when the agreed behavior differs on mobile (a burger
   menu, not a narrower layout), declare viewports in the `initTWD` options
   (`viewports: { mobile: { maxWidth: 767 }, desktop: { minWidth: 768 } }`) and tag that scenario

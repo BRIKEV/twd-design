@@ -69,7 +69,7 @@ src/
     types.ts               shared types
     instructions.ts        loads skill.md + template.html (re-read every turn)
     skill.md               how the bot works and the rules prototypes follow
-    template.html          working Alpine + Tailwind prototype the model adapts
+    template.html          working Vue + Tailwind prototype the model adapts
   github/
     client.ts              GitHub App auth (JWT → installation token)
     files.ts               read repo files, find the repo linked in the thread
