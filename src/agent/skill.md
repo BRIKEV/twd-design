@@ -78,7 +78,12 @@ every new prototype by adapting it, not from scratch:
 
 - All state lives in `state`, seeded from `initialState()`, plus `route`. The DOM is a function of state:
   never build HTML strings or touch the DOM by hand (no `innerHTML`, no `querySelector` in app code).
-  Actions are plain functions that change `state`; return every one from `setup` so the template sees it.
+  Actions are plain functions that change `state`.
+- Values derived from state (a cart's lines, a total, a filtered list) are `computed(() => …)`, used in the
+  template without calling them: `lines.length`, `{{ total }}`, `v-for="item in visibleItems"`. A plain
+  function used without `()` gives wrong results with no error.
+- Return from `setup` every name the template uses: state, computed values, functions. One missing name
+  breaks the whole screen, not just that element.
 - Every screen AND every step of a flow (cart → checkout → done, details → review) is its own route in
   `ROUTES`, never a `step` variable inside one screen. A detail screen takes a parameter (`/projects/:id`,
   read as `route.params.id`). Guard routes in `navigate` (a session, a draft that must exist first).
@@ -210,6 +215,11 @@ repeated steps.
     of the new state: with `v-if` the element leaves the DOM.
   - A toggle button needs `role="switch"` and `:aria-checked="String(value)"`, and is asserted with
     `'have.attr', 'aria-checked', 'true' | 'false'`.
+- A list item (`<li>`) has no accessible name: `findByRole('listitem', { name })` never matches. Find an item
+  by what it contains: its link or heading (`findByRole('link', { name: 'Mobile app' })`), its text, or its
+  checkbox's label.
+- Query controls by their fixed name, never with a count inside it (`link "Wishlist"`, not
+  `"Wishlist (1)"`). Check a count only when it is the feature, as its own visible text.
 - `findBy*` throws when several elements match: rely on the unique accessible names from the Vue rules.
   `within` is not available. A bare number or price repeats on a screen (line, subtotal, total): never query
   it alone; put its label in the same element (`<p>Total {{ price(total) }}</p>`) and query that text.

@@ -148,6 +148,14 @@ export const runScenarios: ScenarioCheck = async (html) => {
   const page = await b.newPage();
   const pageErrors: string[] = [];
   page.on('pageerror', (err) => pageErrors.push((err as Error).message));
+  // Vue reports a render error with console.error, not as a page error, and unmounts the app: without this
+  // the model only sees an empty screen. Missing resources (a favicon) are noise.
+  page.on('console', (msg) => {
+    const text = msg.text();
+    if (msg.type() === 'error' && !text.startsWith('Failed to load resource') && !pageErrors.includes(text) && pageErrors.length < 5) {
+      pageErrors.push(text.slice(0, 500));
+    }
+  });
   try {
     await page.setViewport(BASE);
     // No pause between steps: pace is for people watching.

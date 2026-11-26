@@ -11,7 +11,8 @@ All notable changes to this project are documented here. The project follows [Se
   Prototypes made before keep working; new versions of them are edited as they are.
 - The reference template shows the patterns that failed most: a route per screen and per step of a flow,
   a route with a parameter, a form that enables its button as you type, length checks with a message.
-- A failing scenario tells the model what the screen showed at that moment, so fix rounds aren't blind.
+- A failing scenario tells the model what the screen showed at that moment, and the scenario check passes on
+  Vue's render errors (reported with console.error, they unmount the app), so fix rounds aren't blind.
 - Scenarios check behavior, not copy: where a flow lands, the messages that show up and the state of
   controls, with at most one exact value when it is what the feature is about. Fake prices, names and long
   sentences stay out of them, so they don't fail on arithmetic and port cleanly to the real app.
