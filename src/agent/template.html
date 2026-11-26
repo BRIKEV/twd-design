@@ -198,8 +198,7 @@
     { name: 'new-details', path: '/new/details', session: true },
     { name: 'new-review', path: '/new/review', session: true },
   ];
-  // One example path per screen: the "Prototype screens" bar links to them, and they are rendered to
-  // write the scenarios. Keep it in sync with ROUTES.
+  // One example path per screen, for the "Prototype screens" bar. Keep it in sync with ROUTES.
   const SCREENS = [
     { label: 'Log in', path: '/login' },
     { label: 'Projects', path: '/projects' },
@@ -303,7 +302,7 @@
   const { initTWD, describe, it, beforeEach, twd, userEvent, screenDom, screenDomGlobal, expect } = window.TWD;
 </script>
 
-<!-- TWD scenarios: written after the page, against what each screen shows once rendered -->
+<!-- TWD scenarios -->
 <script id="scenarios">
   async function logIn(user) {
     await user.type(await screenDom.findByLabelText('Email'), 'ana@example.com');

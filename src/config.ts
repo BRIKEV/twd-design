@@ -27,9 +27,6 @@ export const config = {
   // Run each new version's TWD scenarios in headless Chrome and let the model fix failures before
   // posting. On unless SCENARIO_CHECK=off.
   scenarioCheck: env.SCENARIO_CHECK !== 'off',
-  // With the scenario check on: render each new version and write its scenarios against the screens, in a
-  // second model call. On unless SCREENS_STEP=off (the evals compare both).
-  screensStep: env.SCREENS_STEP !== 'off',
   // On SIGTERM, how long to wait for running turns before exiting.
   shutdownTimeoutMs: Number(env.SHUTDOWN_TIMEOUT_MS ?? 60_000),
 };

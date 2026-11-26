@@ -9,10 +9,6 @@ All notable changes to this project are documented here. The project follows [Se
   with `{{ }}` inside one element and everything conditional uses `v-if`, so TWD scenarios query the page
   the way Testing Library queries a real app: no sentences split into `<span>`s, no hidden elements found.
   Prototypes made before keep working; new versions of them are edited as they are.
-- Page first, then scenarios. Each new version is rendered in headless Chrome and the model writes its TWD
-  scenarios against what every screen really shows (roles, names, texts as the browser splits them), the
-  way you write a test for a page that already exists. Scenarios live in their own `<script id="scenarios">`
-  and are written with a new `write_scenarios` tool.
 - The reference template shows the patterns that failed most: a route per screen and per step of a flow,
   a route with a parameter, a form that enables its button as you type, length checks with a message.
 - A failing scenario tells the model what the screen showed at that moment, so fix rounds aren't blind.
@@ -20,7 +16,6 @@ All notable changes to this project are documented here. The project follows [Se
 ### Added
 - Mastra Studio (`npm run studio`) runs one bot turn outside Slack, with traces of every model and tool call,
   as the base for the evals (#1). Code reads can be pinned to a commit (`ref`), so eval results stay comparable.
-- `SCREENS_STEP=off` writes page and scenarios in one call, to compare both ways.
 
 ## [0.3.0] - 2026-11-24
 

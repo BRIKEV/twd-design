@@ -83,7 +83,7 @@ every new prototype by adapting it, not from scratch:
   `ROUTES`, never a `step` variable inside one screen. A detail screen takes a parameter (`/projects/:id`,
   read as `route.params.id`). Guard routes in `navigate` (a session, a draft that must exist first).
 - Add one example path per screen to `SCREENS`, in `ROUTES` order: the "Prototype screens" bar links to
-  them, and the bot renders each one to write the scenarios.
+  them.
 - One `<section v-if="route.name === '<name>'">` (then `v-else-if`) per route inside `<main id="app">`, so
   ONLY the current screen exists in the DOM. Keep `<main id="app">`: it is the screen scenarios query.
 - Navigate with links to `#/<path>` or by calling `navigate('/<path>')`.

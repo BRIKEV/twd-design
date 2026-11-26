@@ -2,7 +2,7 @@ import { Agent } from '@mastra/core/agent';
 import type { MastraModelConfig } from '@mastra/core/llm';
 import type { TracingContext } from '@mastra/core/observability';
 import { config } from '../config.ts';
-import { runScenarios, snapshotScreens, type ScenarioCheck, type ScenarioReport, type ScreensSnapshot } from '../prototype/scenarios.ts';
+import { runScenarios, type ScenarioCheck, type ScenarioReport } from '../prototype/scenarios.ts';
 import { loadInstructions } from './instructions.ts';
 import { prototypeTools } from './tools.ts';
 import type { ChatMessage, DesignContext, PrototypeState, TurnContext } from './types.ts';
@@ -22,31 +22,6 @@ export const setModel = (m: MastraModelConfig) => { model = m; };
 // Headless Chrome in production. Tests plug in a fake, or null to skip it.
 let checkScenarios: ScenarioCheck | null = config.scenarioCheck ? runScenarios : null;
 export const setScenarioCheck = (c: ScenarioCheck | null) => { checkScenarios = c; };
-
-// Renders each screen of a new version so the scenarios are written against the real page. Headless
-// Chrome in production; tests plug in a fake, or null to write page and scenarios in one step.
-let snapshot: ScreensSnapshot | null = config.scenarioCheck && config.screensStep ? snapshotScreens : null;
-export const setScreensSnapshot = (s: ScreensSnapshot | null) => { snapshot = s; };
-
-// Added to the instructions when the screens step runs: the first call writes only the page.
-const SCENARIOS_LATER = `
-
-## Scenarios come second
-
-Every new version is rendered in Chrome after you write it, and you get what each screen shows, to write
-the scenarios against it. So with write_prototype and edit_prototype work only on the page: in a first
-version leave \`<script id="scenarios">\` with an empty \`function scenarios() {}\`; in later versions don't
-touch it. Don't write the Slack reply yet: one line saying the page is ready is enough.`;
-
-function scenariosRequest(screens: string) {
-  return `The page of this version is written. This is what each screen shows once rendered in Chrome, as Testing Library sees it: role "name" (states), and texts exactly as the browser splits them.
-
-${screens}
-
-Now write this version's TWD scenarios with write_scenarios, following the TWD rules. Query only roles, names and texts listed here, exactly as written. A sentence that shows up as two text lines can't be found as one: query the piece you need, or fix the page with edit_prototype first. A text that comes from state (a name typed in a form, a total after adding items) changes after the action that sets it: follow the code you wrote.
-
-Then write your reply for Slack, in the format of your instructions: it is the reply people see.`;
-}
 
 /** Fix rounds after the first run, before the version is posted as it is. */
 const FIX_ROUNDS = 2;
@@ -68,39 +43,23 @@ ${html}`;
  * tracingContext: only from Mastra Studio and the evals, so the model and tool calls show up in its traces.
  */
 export async function runDesignAgent(history: ChatMessage[], state: PrototypeState, ctx: TurnContext, abortSignal?: AbortSignal, tracingContext?: TracingContext) {
-  const tools = prototypeTools(state, ctx);
-  const instructions = loadInstructions() + (snapshot ? SCENARIOS_LATER : '');
-  const agent = new Agent({ id: 'twd-design', name: 'TWD Design', instructions, model, tools });
+  const agent = new Agent({
+    id: 'twd-design',
+    name: 'TWD Design',
+    instructions: loadInstructions(),
+    model,
+    tools: prototypeTools(state, ctx),
+  });
 
   const messages = [...designMessages(ctx.design, ctx.issue), ...prototypeMessages(state), ...history];
   const options = { maxSteps: 16, providerOptions, abortSignal, tracingContext };
   const first = await agent.generate(messages, options);
   const usage = [first.usage];
-  let reply = first.text;
-  let conversation: ChatMessage[] = [...messages, { role: 'assistant', content: first.text || 'Done.' }];
-
-  // Page first, then scenarios: the new version is rendered and the model writes the scenarios against
-  // what each screen really shows, the way you write a test for a page that already exists.
-  if (state.changed && state.html && snapshot && !abortSignal?.aborted) {
-    const screens = await snapshot(state.html);
-    if (typeof screens === 'string') {
-      state.calls.push('screens');
-      conversation = [...conversation, { role: 'user', content: scenariosRequest(screens) }];
-      // Only the scenarios and small page fixes here: rewriting the page would make the screens stale.
-      const scenarioWriter = new Agent({
-        id: 'twd-design-scenarios', name: 'TWD Design', instructions, model,
-        tools: { write_scenarios: tools.write_scenarios, edit_prototype: tools.edit_prototype },
-      });
-      const written = await scenarioWriter.generate(conversation, options);
-      usage.push(written.usage);
-      reply = written.text || reply;
-      conversation = [...conversation, { role: 'assistant', content: written.text || 'Done.' }];
-    }
-  }
 
   // A new version runs its scenarios; failures go back to the model, up to FIX_ROUNDS times.
   let scenarios: ScenarioReport | undefined;
   if (state.changed && state.html && checkScenarios) {
+    let conversation = [...messages, { role: 'assistant' as const, content: first.text || 'Done.' }];
     for (let round = 0; !abortSignal?.aborted; round++) {
       const report = await checkScenarios(state.html);
       if ('unavailable' in report) break;
@@ -113,7 +72,7 @@ export async function runDesignAgent(history: ChatMessage[], state: PrototypeSta
       conversation = [...conversation, { role: 'assistant', content: fix.text || 'Done.' }];
     }
   }
-  return { text: reply, usage: sumUsage(usage), scenarios };
+  return { text: first.text, usage: sumUsage(usage), scenarios };
 }
 
 type Usage = { inputTokens?: number; outputTokens?: number; totalTokens?: number };
