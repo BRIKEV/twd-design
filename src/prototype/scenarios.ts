@@ -1,4 +1,5 @@
 import { createServer, type Server } from 'node:http';
+import { Script } from 'node:vm';
 import type { AddressInfo } from 'node:net';
 import type { Browser } from 'puppeteer';
 import { errorFields, log } from '../log.ts';
@@ -134,9 +135,37 @@ function runInPage(ids: string[], names: Record<string, string>): Promise<Result
 
 const BASE = { width: 1280, height: 800 };
 
+/**
+ * Syntax errors in the prototype's inline scripts, each with the script, the line and what is on it.
+ * The browser only says "missing ) after argument list" and runs nothing, so a fix round can't find it.
+ */
+export function findSyntaxErrors(html: string): string[] {
+  const errors: string[] = [];
+  for (const m of html.matchAll(/<script(\s[^>]*)?>([\s\S]*?)<\/script>/gi)) {
+    const attrs = m[1] ?? '';
+    if (/\ssrc=/i.test(attrs) || (/\stype=/i.test(attrs) && !/type=["']?(text|application)\/javascript/i.test(attrs))) continue;
+    const id = attrs.match(/\sid=["']?([\w-]+)/i)?.[1];
+    const label = id ? `<script id="${id}">` : '<script>';
+    try {
+      new Script(m[2], { filename: 'script' });
+    } catch (err) {
+      if (!(err instanceof SyntaxError)) continue;
+      const line = Number(err.stack?.match(/^script:(\d+)/)?.[1]);
+      const code = line ? m[2].split('\n')[line - 1]?.trim() : undefined;
+      errors.push(`Syntax error in ${label}${line ? `, line ${line}` : ''}: ${err.message}${code ? `\n    ${code}` : ''}`);
+    }
+  }
+  return errors;
+}
+
 /** Runs every scenario once: at a desktop size, plus one pass per other viewport the prototype declares. */
 export const runScenarios: ScenarioCheck = async (html) => {
   const started = Date.now();
+  // A script that doesn't parse runs nothing: say where, without waiting for the browser to time out.
+  const syntax = findSyntaxErrors(html);
+  if (syntax.length) {
+    return { passed: 0, failed: [{ name: "The prototype's scripts", error: syntax.join('\n') }], skipped: 0, pageErrors: [], ms: Date.now() - started };
+  }
   let b: Browser;
   try {
     b = await getBrowser();
