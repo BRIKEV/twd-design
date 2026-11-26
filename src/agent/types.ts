@@ -10,8 +10,11 @@ export type PrototypeState = {
   pr?: { url: string; number: number; branch: string };
 };
 
-/** The repo linked in the thread and its design guide (null if the repo has none). */
-export type DesignContext = { repo: string; guide: string | null } | null;
+/**
+ * The repo linked in the thread and its design guide (null if the repo has none). `ref` pins the code
+ * reads to a commit; only the evals set it, so their results stay comparable while the repo moves on.
+ */
+export type DesignContext = { repo: string; guide: string | null; ref?: string } | null;
 
 /**
  * What the turn knows beyond the messages: the linked repo, where the thread lives, and whether someone

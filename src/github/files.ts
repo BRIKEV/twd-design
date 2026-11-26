@@ -1,8 +1,11 @@
 import { gh, repoToken } from './client.ts';
 
+// ?ref= reads at a commit, branch or tag. Without it, GitHub reads the default branch (what the bot does).
+const at = (ref?: string) => (ref ? `?ref=${encodeURIComponent(ref)}` : '');
+
 /** File contents as text, or null if it doesn't exist. */
-export async function readRepoFile(repo: string, path: string): Promise<string | null> {
-  const res = await gh(`/repos/${repo}/contents/${path}`, await repoToken(repo), {
+export async function readRepoFile(repo: string, path: string, ref?: string): Promise<string | null> {
+  const res = await gh(`/repos/${repo}/contents/${path}${at(ref)}`, await repoToken(repo), {
     headers: { Accept: 'application/vnd.github.raw+json' },
   });
   if (res.status === 404) return null;
@@ -45,8 +48,8 @@ export function findIssue(texts: string[], repo: string | null): number | null {
 export type RepoEntry = { path: string; type: 'file' | 'dir' };
 
 /** The entries of a folder (one level), or null if it doesn't exist. A file path gives null too. */
-export async function listRepoFiles(repo: string, path: string): Promise<RepoEntry[] | null> {
-  const res = await gh(`/repos/${repo}/contents/${path.replace(/^\/+|\/+$/g, '')}`, await repoToken(repo));
+export async function listRepoFiles(repo: string, path: string, ref?: string): Promise<RepoEntry[] | null> {
+  const res = await gh(`/repos/${repo}/contents/${path.replace(/^\/+|\/+$/g, '')}${at(ref)}`, await repoToken(repo));
   if (res.status === 404) return null;
   if (!res.ok) throw new Error(`GitHub list failed for ${repo}/${path}: ${res.status}`);
   const body = (await res.json()) as { path: string; type: string }[] | object;

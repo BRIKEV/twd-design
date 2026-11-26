@@ -9,3 +9,8 @@ node_modules
 site/.vitepress/dist
 site/.vitepress/cache
 .wrangler
+
+# Mastra Studio and evals
+.mastra
+evals/*.db*
+evals/reports

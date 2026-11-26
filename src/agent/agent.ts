@@ -1,5 +1,6 @@
 import { Agent } from '@mastra/core/agent';
 import type { MastraModelConfig } from '@mastra/core/llm';
+import type { TracingContext } from '@mastra/core/observability';
 import { config } from '../config.ts';
 import { runScenarios, type ScenarioCheck, type ScenarioReport } from '../prototype/scenarios.ts';
 import { loadInstructions } from './instructions.ts';
@@ -37,8 +38,11 @@ The prototype as it ran:
 ${html}`;
 }
 
-/** Runs one turn: the thread so far + design guide + current prototype in, reply text out. */
-export async function runDesignAgent(history: ChatMessage[], state: PrototypeState, ctx: TurnContext, abortSignal?: AbortSignal) {
+/**
+ * Runs one turn: the thread so far + design guide + current prototype in, reply text out.
+ * tracingContext: only from Mastra Studio and the evals, so the model and tool calls show up in its traces.
+ */
+export async function runDesignAgent(history: ChatMessage[], state: PrototypeState, ctx: TurnContext, abortSignal?: AbortSignal, tracingContext?: TracingContext) {
   const agent = new Agent({
     id: 'twd-design',
     name: 'TWD Design',
@@ -48,7 +52,7 @@ export async function runDesignAgent(history: ChatMessage[], state: PrototypeSta
   });
 
   const messages = [...designMessages(ctx.design, ctx.issue), ...prototypeMessages(state), ...history];
-  const options = { maxSteps: 16, providerOptions, abortSignal };
+  const options = { maxSteps: 16, providerOptions, abortSignal, tracingContext };
   const first = await agent.generate(messages, options);
   const usage = [first.usage];
 

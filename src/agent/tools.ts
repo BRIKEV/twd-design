@@ -115,7 +115,7 @@ export function prototypeTools(state: PrototypeState, ctx: TurnContext) {
     execute: async ({ path }) => {
       if (!ctx.design?.repo) return noRepo(state, 'list');
       try {
-        const entries = await listRepoFiles(ctx.design.repo, path);
+        const entries = await listRepoFiles(ctx.design.repo, path, ctx.design.ref);
         state.calls.push(`list:${path || '/'}`);
         if (!entries) return { ok: false, error: `Folder not found: ${path}` };
         return { ok: true, entries: entries.map((e) => (e.type === 'dir' ? `${e.path}/` : e.path)) };
@@ -139,7 +139,7 @@ export function prototypeTools(state: PrototypeState, ctx: TurnContext) {
         return { ok: false, error: `Not readable: ${clean} may hold secrets.` };
       }
       try {
-        const content = await readRepoFile(ctx.design.repo, clean);
+        const content = await readRepoFile(ctx.design.repo, clean, ctx.design.ref);
         state.calls.push(`read:${clean}`);
         if (content == null) return { ok: false, error: `File not found: ${clean}` };
         if (content.length <= MAX_READ) return { ok: true, content };

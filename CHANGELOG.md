@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The project follows [Se
 
 ## [Unreleased]
 
+### Added
+- Mastra Studio (`npm run studio`) runs one bot turn outside Slack, with traces of every model and tool call,
+  as the base for the evals (#1). Code reads can be pinned to a commit (`ref`), so eval results stay comparable.
+
 ## [0.3.0] - 2026-11-24
 
 Image: `ghcr.io/brikev/twd-design:0.3.0`. Render services built from the Blueprint move to `:0.3` on their next sync.
