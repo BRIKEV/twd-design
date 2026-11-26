@@ -15,6 +15,7 @@ All notable changes to this project are documented here. The project follows [Se
   Vue's render errors (reported with console.error, they unmount the app), so fix rounds aren't blind.
 - A syntax error in one of the prototype's scripts is reported with the script, the line and its code,
   before opening the browser: the browser alone says "missing ) after argument list" and runs nothing.
+- The skill spells out that the `twd.waitFor` callback isn't async: `getBy*` inside it, never `await`.
 - Scenarios check behavior, not copy: where a flow lands, the messages that show up and the state of
   controls, with at most one exact value when it is what the feature is about. Fake prices, names and long
   sentences stay out of them, so they don't fail on arithmetic and port cleanly to the real app.

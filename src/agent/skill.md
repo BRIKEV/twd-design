@@ -190,6 +190,9 @@ repeated steps.
 - Always `await ...findBy*` / `findAllBy*`: they wait up to 3 s for the element. Use `queryBy*` only to
   assert absence: `expect(screenDom.queryByRole('heading', { name: 'X' })).to.equal(null)`. `getBy*` only
   inside `await twd.waitFor(() => ...)`.
+- The `twd.waitFor` callback is NOT async: never `await` inside it (a syntax error that stops every
+  scenario), so query there with `getBy*`, never `findBy*`:
+  `await twd.waitFor(() => twd.should(screenDom.getByRole('button', { name: 'Save' }), 'have.attr', 'aria-pressed', 'true'))`.
 - After an action, put the expected state in the query, so `findBy*` waits for it: `findByText('3 projects')`,
   `findByRole('switch', { name: 'Email for Comments', checked: true })`. `twd.should` checks once and does
   not retry; when there is nothing new to find, wrap it: `await twd.waitFor(() => twd.should(el, ...))`.
