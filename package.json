@@ -11,7 +11,8 @@
     "site:dev": "vitepress dev site",
     "site:build": "vitepress build site",
     "site:preview": "vitepress preview site",
-    "studio": "mastra dev"
+    "studio": "mastra dev",
+    "evals": "node --env-file-if-exists=.env evals/run.ts"
   },
   "author": "",
   "license": "MIT",
