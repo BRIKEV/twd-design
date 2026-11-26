@@ -1,7 +1,7 @@
 // Requests that run with the real model against a repo pinned to a commit, so results stay comparable while
 // the repo moves on. twd-story is public and has a design/DESIGN.md with a "Where things are" section.
 
-export const REPO = { repo: 'BRIKEV/twd-story', ref: '330a46f0c74f0515662ebb151ab34ca945592ccd' };
+export const REPO = { repo: 'BRIKEV/twd-story', ref: 'cedfe6e247cf906bd69aa631699b7449d7aa213c' };
 
 export type EvalCase = {
   id: string;

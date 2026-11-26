@@ -85,8 +85,11 @@ describe('A designer and a PM shape a login screen with the bot and hand it to d
     assert.deepEqual(pr.basedOn, ['main-sha'], 'branched from the latest main');
     assert.deepEqual(Object.keys(pr.files), ['design/prototypes/login-screen/index.html', 'design/prototypes/login-screen/intent.md']);
     assert.equal(pr.files['design/prototypes/login-screen/index.html'], slack.versions(thread)[1].html, 'the PR has v2, the approved one');
-    assert.equal(pr.files['design/prototypes/login-screen/intent.md'], INTENT);
-    assert.ok(pr.body.startsWith(INTENT));
+    const intent = pr.files['design/prototypes/login-screen/intent.md'];
+    assert.ok(intent.startsWith(INTENT), 'intent.md is what the model wrote');
+    assert.match(intent, /Port the behavior these criteria describe, not the prototype's texts, fake data or markup\./,
+      'and tells development to port the behavior, not the prototype');
+    assert.ok(pr.body.startsWith(intent));
     assert.ok(pr.body.includes(`https://acme.slack.com/archives/C_DESIGN/p${thread.ts.replace('.', '')}`), 'the PR links to the discussion');
     assert.equal(model.lastToolResult().url, 'https://github.com/acme/web/pull/1', 'the bot knew the PR link to share it');
     assert.equal(slack.lastReply(thread)!.text, 'Done: https://github.com/acme/web/pull/1');

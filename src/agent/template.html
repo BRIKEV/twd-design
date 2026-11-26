@@ -311,6 +311,8 @@
     await screenDom.findByRole('heading', { name: 'Your projects' });
   }
 
+  // Each scenario walks a flow and checks where it leads: screens, messages, control states. At most one
+  // exact value, when it is what the feature is about (the count after a search).
   function scenarios() {
     describe('Projects', () => {
       beforeEach(() => resetApp());
@@ -318,9 +320,8 @@
       it('logs in and sees their projects', async () => {
         const user = userEvent.setup();
         await logIn(user);
-        twd.should(await screenDom.findByText('Showing 2 of 2 projects'), 'be.visible');
         twd.should(await screenDom.findByRole('link', { name: 'Website redesign' }), 'be.visible');
-        twd.should(await screenDom.findByText('3 of 5 tasks done'), 'be.visible');
+        twd.should(await screenDom.findByRole('link', { name: 'Mobile app' }), 'be.visible');
       });
 
       it('shows an error with wrong credentials', async () => {
@@ -328,7 +329,8 @@
         await user.type(await screenDom.findByLabelText('Email'), 'ana@example.com');
         await user.type(await screenDom.findByLabelText('Password'), 'nope');
         await user.click(await screenDom.findByRole('button', { name: 'Log in' }));
-        twd.should(await screenDom.findByRole('alert'), 'have.text', 'Wrong email or password.');
+        twd.should(await screenDom.findByRole('alert'), 'be.visible');
+        expect(screenDom.queryByRole('heading', { name: 'Your projects' })).to.equal(null);
       });
 
       it('creates a project in two steps', async () => {
@@ -338,13 +340,13 @@
         twd.should(await screenDom.findByRole('button', { name: 'Continue' }), 'be.disabled');
         await user.type(await screenDom.findByLabelText('Project name'), 'AB');
         await user.click(await screenDom.findByRole('button', { name: 'Continue' }));
-        twd.should(await screenDom.findByRole('alert'), 'have.text', 'Use at least 3 characters.');
+        twd.should(await screenDom.findByRole('alert'), 'be.visible');
         await user.type(await screenDom.findByLabelText('Project name'), 'C billing');
         await user.click(await screenDom.findByRole('button', { name: 'Continue' }));
-        twd.should(await screenDom.findByText('Create ABC billing for Ana García?'), 'be.visible');
+        await screenDom.findByRole('heading', { name: 'Review' });
         await user.click(await screenDom.findByRole('button', { name: 'Create project' }));
-        twd.should(await screenDom.findByRole('status'), 'have.text', 'ABC billing added');
-        twd.should(await screenDom.findByText('Showing 3 of 3 projects'), 'be.visible');
+        twd.should(await screenDom.findByRole('status'), 'be.visible');
+        twd.should(await screenDom.findByRole('link', { name: 'ABC billing' }), 'be.visible');
       });
 
       it('finds a project and deletes it after confirming', async () => {
@@ -352,14 +354,14 @@
         await logIn(user);
         await user.type(await screenDom.findByLabelText('Search projects'), 'mob');
         twd.should(await screenDom.findByText('Showing 1 of 2 projects'), 'be.visible');
+        expect(screenDom.queryByRole('link', { name: 'Website redesign' })).to.equal(null);
         await user.click(await screenDom.findByRole('link', { name: 'Mobile app' }));
-        twd.should(await screenDom.findByText('8 of 8 tasks done'), 'be.visible');
+        await screenDom.findByRole('heading', { name: 'Mobile app' });
         await user.click(await screenDom.findByRole('button', { name: 'Delete project' }));
-        twd.should(await screenDomGlobal.findByText('Mobile app will be deleted for everyone.'), 'be.visible');
+        await screenDomGlobal.findByRole('dialog', { name: 'Delete project?' });
         await user.click(await screenDomGlobal.findByRole('button', { name: 'Yes, delete project' }));
-        twd.should(await screenDom.findByRole('status'), 'have.text', 'Mobile app deleted');
-        twd.should(await screenDom.findByText('Showing 0 of 1 projects'), 'be.visible');
-        twd.should(await screenDom.findByText('No projects match "mob".'), 'be.visible');
+        twd.should(await screenDom.findByRole('status'), 'be.visible');
+        expect(screenDom.queryByRole('link', { name: 'Mobile app' })).to.equal(null);
       });
 
       it('sends visitors without a session to log in', async () => {

@@ -81,6 +81,7 @@ export function prototypeTools(state: PrototypeState, ctx: TurnContext) {
       // The prototype sits next to its issue: design/prototypes/71-my-karma, branch design/71-my-karma.
       if (ctx.issue && !safeSlug.startsWith(`${ctx.issue}-`)) safeSlug = `${ctx.issue}-${safeSlug}`;
       const dir = `design/prototypes/${safeSlug}`;
+      const intentMd = `${intent.trim()}\n\n${PORT_NOTE}\n`;
       const footer = [
         '---',
         `Prototype: \`${dir}/index.html\` (open it in a browser and run the scenarios from the TWD sidebar).`,
@@ -91,10 +92,10 @@ export function prototypeTools(state: PrototypeState, ctx: TurnContext) {
         state.pr = await openPullRequest(ctx.design.repo, {
           slug: safeSlug,
           title,
-          body: `${intent}\n\n${footer}`,
+          body: `${intentMd}\n${footer}`,
           files: [
             { path: `${dir}/index.html`, content: state.html },
-            { path: `${dir}/intent.md`, content: intent },
+            { path: `${dir}/intent.md`, content: intentMd },
           ],
         });
         state.calls.push(`pr:#${state.pr.number}`);
@@ -158,6 +159,10 @@ export function prototypeTools(state: PrototypeState, ctx: TurnContext) {
     read_repo_file: readFile,
   };
 }
+
+// Development builds the behavior the criteria describe; the prototype's copy, fake data and markup are
+// only there so it can be clicked through. Added by the bot, so it is always there.
+const PORT_NOTE = "> Port the behavior these criteria describe, not the prototype's texts, fake data or markup.";
 
 /** Per file read: a big page and its components fit, a lockfile or a bundle doesn't flood the model. */
 const MAX_READ = 40_000;

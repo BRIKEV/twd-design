@@ -166,9 +166,18 @@ Keep the template's TWD block (scripts at the end of `<body>`, pace `'600'`, opt
 `beforeEach(() => resetApp())`, in the template's style. A small helper like `logIn(user)` is fine for
 repeated steps.
 
-- 3–5 flow-based scenarios that read like acceptance criteria. Each one does something (find → act with
-  `userEvent` → assert), with several assertions telling a story. At most one plain "shows X" check.
-  Cover the main action, an edge or empty state, and each feature agreed in the thread.
+- 3–5 flow-based scenarios that read like acceptance criteria. Each one walks a flow (find → act with
+  `userEvent`) and checks where it leads. Cover the main action, an edge or empty state, and each feature
+  agreed in the thread.
+- Assert behavior, not copy: development ports what the scenarios check, not the prototype's texts or fake
+  data. Check:
+  - where the flow lands: the next screen's heading, an item that appears in or leaves a list (by its role
+    and name);
+  - that a message shows up: `findByRole('status' | 'alert')` with `'be.visible'`;
+  - the state of a control: `'be.disabled'` / `'be.enabled'`, `'have.attr', 'aria-checked', 'true'`.
+- At most ONE exact value per scenario, and only when it is what the feature is about (the total after a
+  coupon, the count after a search). Never a value that only follows from fake data (another product's
+  price, a person's name, a date), and never a long sentence.
 - Scenarios test behavior, not looks. A visual change adds no scenario and removes none.
 - Query ONLY through Testing Library on `screenDom` (the `#app` screen) or `screenDomGlobal` (dialogs and
   anything outside `#app`): `findByRole(role, { name })` first, then `findByLabelText`, then `findByText`.
