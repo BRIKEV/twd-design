@@ -28,7 +28,7 @@ const picked = values.cases ? CASES.filter((c) => values.cases!.split(',').inclu
 const data = picked.flatMap((c) =>
   Array.from({ length: repeat }, () => ({
     input: { request: c.request, history: [], ...REPO, approved: false },
-    groundTruth: { id: c.id, kind: c.kind },
+    groundTruth: { id: c.id, kind: c.kind, existing: Boolean(c.existing) },
   })));
 
 const dir = join(import.meta.dirname, 'reports');

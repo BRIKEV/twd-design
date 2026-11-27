@@ -10,7 +10,7 @@ type TurnOutput = {
   usage: { inputTokens?: number; outputTokens?: number };
   ms: number;
 };
-type Run = { output?: TurnOutput; groundTruth?: Pick<EvalCase, 'kind'> };
+type Run = { output?: TurnOutput; groundTruth?: Pick<EvalCase, 'kind' | 'existing'> };
 
 /** The scenario checks of the turn, in order: "check:3/6" → { passed: 3, total: 6 }. */
 export function checksOf(output: TurnOutput) {
@@ -57,6 +57,21 @@ export const noVersionForQuestion = createScorer({
     run.groundTruth?.kind === 'question' && run.output ? { changed: run.output.changed } : notScorable('not a question'))
   .generateScore(({ results }) => (results.preprocessStepResult.changed ? 0 : 1));
 
+// A prototype invented without reading the screen's code is simpler and passes its checks more easily: it
+// would look like a win. When the request changes an existing screen, the code must be read first.
+export const readTheCode = createScorer({
+  id: 'read-the-code',
+  description: 'On a change to an existing screen, the repo code was read before the first version (1) or not (0).',
+})
+  .preprocess(({ run }: { run: Run }) => {
+    if (!run.groundTruth?.existing) return notScorable('not a change to an existing screen');
+    if (!run.output) return notScorable('the turn failed');
+    const firstWrite = run.output.calls.findIndex((c) => c.startsWith('write:') || c.startsWith('plan:'));
+    const before = firstWrite === -1 ? run.output.calls : run.output.calls.slice(0, firstWrite);
+    return { read: before.some((c) => c.startsWith('read:')) };
+  })
+  .generateScore(({ results }) => (results.preprocessStepResult.read ? 1 : 0));
+
 export const seconds = createScorer({
   id: 'seconds',
   description: 'Wall time of the turn, in seconds.',
@@ -71,4 +86,4 @@ export const inputKTokens = createScorer({
   .preprocess(({ run }: { run: Run }) => (run.output ? { tokens: run.output.usage.inputTokens ?? 0 } : notScorable('the turn failed')))
   .generateScore(({ results }) => Math.round(results.preprocessStepResult.tokens / 100) / 10);
 
-export const SCORERS = [firstCheckGreen, endsGreen, fixRounds, noVersionForQuestion, seconds, inputKTokens];
+export const SCORERS = [firstCheckGreen, endsGreen, fixRounds, readTheCode, noVersionForQuestion, seconds, inputKTokens];

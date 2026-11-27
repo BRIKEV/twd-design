@@ -7,12 +7,14 @@ export type EvalCase = {
   id: string;
   /** change: a new version is expected. question: an answer, no new version. */
   kind: 'change' | 'question';
+  /** The request changes a screen the repo already has: its code must be read before the first version. */
+  existing?: boolean;
   request: string;
 };
 
 export const CASES: EvalCase[] = [
-  { id: 'coupon', kind: 'change', request: 'On the shop, add a coupon code field to the checkout form' },
+  { id: 'coupon', kind: 'change', existing: true, request: 'On the shop, add a coupon code field to the checkout form' },
   { id: 'wishlist', kind: 'change', request: 'A wishlist where people save products from the shop and can move them to the cart' },
-  { id: 'todo-filter', kind: 'change', request: 'On the todo board, add a filter to show all, active or done todos' },
+  { id: 'todo-filter', kind: 'change', existing: true, request: 'On the todo board, add a filter to show all, active or done todos' },
   { id: 'question', kind: 'question', request: 'What fields does the checkout form ask for today?' },
 ];
