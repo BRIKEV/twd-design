@@ -163,6 +163,7 @@ export function prototypeTools(state: PrototypeState, ctx: TurnContext) {
         const content = await readRepoFile(ctx.design.repo, clean, ctx.design.ref);
         state.calls.push(`read:${clean}`);
         if (content == null) return { ok: false, error: `File not found: ${clean}` };
+        (state.reads ??= []).push({ path: clean, content: content.slice(0, MAX_READ) });
         if (content.length <= MAX_READ) return { ok: true, content };
         return { ok: true, content: content.slice(0, MAX_READ), truncated: `Only the first ${MAX_READ} of ${content.length} characters.` };
       } catch (err) {

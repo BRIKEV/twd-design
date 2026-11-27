@@ -4,6 +4,7 @@
 
 import { describe, test, after } from 'node:test';
 import assert from 'node:assert/strict';
+import { config } from '../../src/config.ts';
 import { fakeFetch } from '../helpers/fake-fetch.ts';
 import { decide, scriptedModel } from '../helpers/scripted-model.ts';
 import { slackWorkspace } from '../helpers/slack-workspace.ts';
@@ -45,5 +46,40 @@ describe('Scenarios come first', () => {
       'after planning, the model is told to write the page to match them');
     assert.ok(slack.versions(root)[0].html.includes("findByRole('button', { name: 'Checkout' })"), 'the posted version carries the planned scenarios');
     assert.equal(model.pending(), 0);
+  });
+
+  // PLAN_THINKING=on: thinking pays for the short plan, not for the long page.
+  test('With thinking for the plan, the plan is made first and the page is written from it', async () => {
+    config.model.planThinking = true;
+    try {
+      const calls = model.calls();
+      model.willDo(
+        decide.plan(SCENARIOS), decide.reply('Planned.'),
+        decide.write('cart.html', PAGE), decide.reply('*Cart* — with a checkout button.'),
+      );
+
+      const root = await slack.ask('U_ANA', 'a cart page');
+
+      assert.match(model.saw(calls + 2), /Plan for this version\. Write the page now[\s\S]*findByRole\('button', \{ name: 'Checkout' \}\)[\s\S]*Page contract/,
+        'the page is written from the plan: its scenarios and its contract');
+      assert.equal(slack.versions(root).length, 1);
+      assert.match(slack.textOf(slack.botReplies(root).find((m) => m.html)), /\*Cart\*/, 'the reply is the one written with the page');
+      assert.equal(model.pending(), 0);
+    } finally {
+      config.model.planThinking = false;
+    }
+  });
+
+  test('With thinking for the plan, a question is answered by the first call alone', async () => {
+    config.model.planThinking = true;
+    try {
+      model.willDo(decide.reply('The cart has a checkout button.'));
+
+      await slack.ask('U_ANA', 'what does the cart have?');
+
+      assert.equal(model.pending(), 0);
+    } finally {
+      config.model.planThinking = false;
+    }
   });
 });

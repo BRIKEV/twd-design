@@ -10,6 +10,8 @@ export type PrototypeState = {
   pr?: { url: string; number: number; branch: string };
   /** The scenarios and page contract planned this turn (plan_scenarios), before the page is written. */
   plan?: { code: string; contract: string };
+  /** Repo files read this turn, so a later step of the same turn sees them without reading again. */
+  reads?: { path: string; content: string }[];
 };
 
 /**

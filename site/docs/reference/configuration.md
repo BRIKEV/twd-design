@@ -38,6 +38,7 @@ a public HTTPS URL configured as the Request URL in your Slack app.
 | `MODEL` | No | The model, as a [Mastra model router](https://mastra.ai/models) id: `provider/model`. Default `zai/glm-5.3`. |
 | *Provider API key* | Yes | The key variable of the provider in `MODEL`, see below. |
 | `THINKING` | No | `on` enables GLM's thinking mode. Off by default: it roughly doubles output tokens and adds minutes per turn without improving prototypes noticeably. |
+| `PLAN_THINKING` | No | `on` enables GLM's thinking only while the bot reads the code and plans a version (its scenarios and page contract); the page is then written without it. |
 
 | Provider prefix | API key variable |
 |---|---|

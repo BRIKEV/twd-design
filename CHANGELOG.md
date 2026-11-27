@@ -32,6 +32,8 @@ All notable changes to this project are documented here. The project follows [Se
   (and whether it's in the header or `#app`), the initial data they rely on, and what each action changes.
   Scenarios prefer roles over text and never query a composed string like `'1 item · Total €14.50'`: in the
   evals, 17 of 18 first-check failures were the page not showing exactly what the scenarios queried.
+- `PLAN_THINKING=on` turns GLM's thinking on only while reading the code and planning a version; the page
+  is then written without it, from the plan and the code read.
 - Up to 3 fix rounds when a version's scenarios fail (was 2): a version takes longer rather than being
   posted with failing scenarios.
 
