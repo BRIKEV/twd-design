@@ -23,6 +23,7 @@
 
 <!-- Vue mounts on #prototype, not #root: TWD's screenDom takes #root first, and the screen is <main id="app"> -->
 <div id="prototype" v-cloak>
+  <!-- Header (outside #app: scenarios query it with screenDomGlobal) -->
   <header class="sticky top-0 z-10 border-b border-gray-200 bg-white/80 backdrop-blur">
     <div class="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
       <span class="text-xl font-semibold">Projects</span>
@@ -317,11 +318,13 @@
     describe('Projects', () => {
       beforeEach(() => resetApp());
 
-      it('logs in and sees their projects', async () => {
+      it('logs in, sees their projects and logs out', async () => {
         const user = userEvent.setup();
         await logIn(user);
         twd.should(await screenDom.findByRole('link', { name: 'Website redesign' }), 'be.visible');
         twd.should(await screenDom.findByRole('link', { name: 'Mobile app' }), 'be.visible');
+        await user.click(await screenDomGlobal.findByRole('button', { name: 'Log out' }));
+        twd.should(await screenDom.findByRole('heading', { name: 'Log in' }), 'be.visible');
       });
 
       it('shows an error with wrong credentials', async () => {

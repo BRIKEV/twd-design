@@ -205,6 +205,8 @@ repeated steps.
 - Query ONLY through Testing Library on `screenDom` (the `#app` screen) or `screenDomGlobal` (dialogs and
   anything outside `#app`): `findByRole(role, { name })` first, then `findByLabelText`, then `findByText`.
   NEVER `querySelector`, class names, ids or `document` in a scenario.
+- `screenDom` sees only `<main id="app">`. The header and its navigation (Cart, Wishlist, Log out) are
+  outside it: query them with `screenDomGlobal`, e.g. `screenDomGlobal.findByRole('link', { name: 'Wishlist' })`.
 - Always `await ...findBy*` / `findAllBy*`: they wait up to 3 s for the element. Use `queryBy*` only to
   assert absence: `expect(screenDom.queryByRole('heading', { name: 'X' })).to.equal(null)`. `getBy*` only
   inside `await twd.waitFor(() => ...)`.

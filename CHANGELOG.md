@@ -21,6 +21,8 @@ All notable changes to this project are documented here. The project follows [Se
   writing the page first), with fewer fix rounds.
 - A control that shows a count keeps a fixed name (the count goes in an `aria-hidden` badge), and scenarios
   check that a message shows up rather than its wording.
+- The skill and the template show that the header is outside `#app`: scenarios reach its links and buttons
+  with `screenDomGlobal`.
 - Scenarios check behavior, not copy: where a flow lands, the messages that show up and the state of
   controls, with at most one exact value when it is what the feature is about. Fake prices, names and long
   sentences stay out of them, so they don't fail on arithmetic and port cleanly to the real app.
