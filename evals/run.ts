@@ -62,7 +62,7 @@ const result = await runEvals({
       ...(output ? {} : { error: 'the turn failed (see the trace in Studio)' }),
     };
     rows.push(row);
-    appendFileSync(file, `${JSON.stringify({ ...variant, ...row, html: output?.html ?? null, reply: output?.reply ?? null })}\n`);
+    appendFileSync(file, `${JSON.stringify({ ...variant, ...row, checks: output?.checks ?? [], html: output?.html ?? null, reply: output?.reply ?? null })}\n`);
     const checks = output ? checksOf(output).map((c) => `${c.passed}/${c.total}`).join(' → ') : row.error;
     console.log(`[${n}/${data.length}] ${row.id.padEnd(12)} ${checks || 'no version'} · ${scores.seconds ?? '-'} s · ${scores['input-ktokens'] ?? '-'}k in`);
   },

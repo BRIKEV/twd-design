@@ -25,6 +25,11 @@ export const turnOutput = z.object({
   changed: z.boolean(),
   calls: z.array(z.string()).describe('Tool calls in order, e.g. read:src/router.tsx, write:16339, check:4/4'),
   scenarios: z.object({ passed: z.number(), failed: z.number() }).nullable(),
+  checks: z.array(z.object({
+    passed: z.number(),
+    failed: z.array(z.object({ name: z.string(), error: z.string() })),
+    pageErrors: z.array(z.string()),
+  })).describe('Every scenario check of the turn, in order, with the failures the model was sent to fix'),
   usage: z.object({ inputTokens: z.number().optional(), outputTokens: z.number().optional(), totalTokens: z.number().optional() }),
   ms: z.number(),
 });
@@ -43,7 +48,7 @@ const turn = createStep({
       calls: [],
     };
     const started = Date.now();
-    const { text, usage, scenarios } = await runDesignAgent(
+    const { text, usage, scenarios, checks } = await runDesignAgent(
       [...history, { role: 'user', content: request }],
       state,
       { design, approved },
@@ -57,6 +62,7 @@ const turn = createStep({
       changed: state.changed,
       calls: state.calls,
       scenarios: scenarios ? { passed: scenarios.passed, failed: scenarios.failed.length } : null,
+      checks: checks.map(({ passed, failed, pageErrors }) => ({ passed, failed, pageErrors })),
       usage: usage ?? {},
       ms: Date.now() - started,
     };

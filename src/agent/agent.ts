@@ -58,12 +58,14 @@ export async function runDesignAgent(history: ChatMessage[], state: PrototypeSta
 
   // A new version runs its scenarios; failures go back to the model, up to FIX_ROUNDS times.
   let scenarios: ScenarioReport | undefined;
+  const checks: ScenarioReport[] = [];
   if (state.changed && state.html && checkScenarios) {
     let conversation = [...messages, { role: 'assistant' as const, content: first.text || 'Done.' }];
     for (let round = 0; !abortSignal?.aborted; round++) {
       const report = await checkScenarios(state.html);
       if ('unavailable' in report) break;
       scenarios = report;
+      checks.push(report);
       state.calls.push(`check:${report.passed}/${report.passed + report.failed.length}`);
       if (!report.failed.length || round === FIX_ROUNDS) break;
       conversation = [...conversation, { role: 'user', content: fixRequest(state.html, report) }];
@@ -72,7 +74,7 @@ export async function runDesignAgent(history: ChatMessage[], state: PrototypeSta
       conversation = [...conversation, { role: 'assistant', content: fix.text || 'Done.' }];
     }
   }
-  return { text: first.text, usage: sumUsage(usage), scenarios };
+  return { text: first.text, usage: sumUsage(usage), scenarios, checks };
 }
 
 type Usage = { inputTokens?: number; outputTokens?: number; totalTokens?: number };
