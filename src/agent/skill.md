@@ -42,9 +42,16 @@ When a turn makes a new version, work test first, in this order:
 1. Read the code you need (see "The product's code").
 2. Call `plan_scenarios` with the full content of `<script id="scenarios">`: this version's acceptance
    criteria as TWD scenarios, following the TWD rules. Here you decide the screens and routes, and the exact
-   role and name of every control and text the scenarios use.
-3. Write the page with `write_prototype` or `edit_prototype` so that every query in those scenarios matches:
-   each role, name and text exists exactly as written, each flow they walk works. Put the planned scenarios
+   role and name of every control and text the scenarios use. With it, the page contract:
+   - every role + name and every text the scenarios query, each with the ONE element that will hold it,
+     written as it will be in the page and where it lives (the header or `#app`):
+     `link "Wishlist" → header: <a href="#/wishlist">Wishlist <span aria-hidden="true">{{ count }}</span></a>`,
+     `text "Total €22.50" → #app: <p>Total {{ price(total) }}</p>`. Each name appears once on its screen;
+   - the initial data the scenarios rely on (items, their states, prices), so every value they check
+     follows from it;
+   - one line per action: what it changes in `state` (`toggleSaved(id)`: adds or removes only that id).
+3. Write the page with `write_prototype` or `edit_prototype` following the contract: each element as the
+   contract writes it, the initial data as it lists it, each action as it says. Put the planned scenarios
    in `<script id="scenarios">` verbatim; change one only if the page can't sensibly do what it says.
 
 For a question or an approval, plan nothing.
@@ -249,6 +256,12 @@ repeated steps.
 - `aria-label` names controls (buttons, links, inputs) for `findByRole(role, { name })`; it is not text.
   A counter or badge a scenario checks needs visible text (`<span>{{ count }} items</span>`), found with
   `findByText`.
+- Prefer roles over text: find things by role and name (a heading, a link, a button, a `status`/`alert`, a
+  checkbox by its label). Use `findByText` only for a short text that is what the feature is about (a
+  count, a total), never a composed string (`'1 item · Total €14.50'`): the page must show it as one
+  element's whole text, and composed strings are where that breaks.
+- Every value a scenario checks follows from the page's initial data and the steps the scenario takes:
+  list the initial data in the contract, then work out the expected value from it.
 - `findByText` matches the whole text of ONE element. Every name or text a scenario queries must be exactly
   what one element shows once rendered. Check each one before you finish.
 - Scenarios run at a desktop size by default. Only when the agreed behavior differs on mobile (a burger

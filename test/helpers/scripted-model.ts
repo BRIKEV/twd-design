@@ -18,7 +18,7 @@ export const decide = {
   openPr: (slug: string, title: string, intent: string): Step => [call('open_pull_request', { slug, title, intent })],
   list: (path: string): Step => [call('list_repo_files', { path })],
   read: (path: string): Step => [call('read_repo_file', { path })],
-  plan: (code: string): Step => [call('plan_scenarios', { code })],
+  plan: (code: string, contract = 'button "Checkout" → #app: <button>Checkout</button>'): Step => [call('plan_scenarios', { code, contract })],
   reply: (text: string): Step => [{ type: 'text', text }],
 };
 

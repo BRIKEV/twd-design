@@ -41,7 +41,7 @@ describe('Scenarios come first', () => {
 
     const root = await slack.ask('U_ANA', 'a cart page');
 
-    assert.match(model.saw(calls + 1), /Now write the page so every role, name and text these scenarios query exists/,
+    assert.match(model.saw(calls + 1), /Now write the page following the contract/,
       'after planning, the model is told to write the page to match them');
     assert.ok(slack.versions(root)[0].html.includes("findByRole('button', { name: 'Checkout' })"), 'the posted version carries the planned scenarios');
     assert.equal(model.pending(), 0);

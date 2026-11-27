@@ -61,10 +61,14 @@ export function prototypeTools(state: PrototypeState, ctx: TurnContext) {
       'Then write the page so every query in them matches, and put them in the page verbatim.',
     inputSchema: z.object({
       code: z.string().describe('The whole content of <script id="scenarios">: helpers plus function scenarios() { describe(...) }'),
+      contract: z.string().describe(
+        'The page contract: every role + name and text the scenarios query, each with the one element that holds it and ' +
+        'where (header or #app); the initial data they rely on; one line per action saying what it changes.'),
     }),
-    execute: async ({ code }) => {
+    execute: async ({ code, contract }) => {
       state.calls.push(`plan:${(code.match(/\bit\(/g) ?? []).length}`);
-      return { ok: true, next: 'Now write the page so every role, name and text these scenarios query exists exactly as written, and every flow they walk works. Put them verbatim in <script id="scenarios">.' };
+      state.plan = { code, contract };
+      return { ok: true, next: 'Now write the page following the contract: each element as it writes it, the initial data as it lists it, each action as it says. Put the scenarios verbatim in <script id="scenarios">.' };
     },
   });
 
