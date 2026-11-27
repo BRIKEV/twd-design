@@ -48,6 +48,19 @@ describe('Scenarios come first', () => {
     assert.equal(model.pending(), 0);
   });
 
+  test('A plan that breaks a scenario rule is sent back, and fixed before the page is written', async () => {
+    const calls = model.calls();
+    const badPlan = SCENARIOS.replace("name: 'Checkout' })", "name: 'Checkout 1' })");
+    model.willDo(decide.plan(badPlan), decide.plan(SCENARIOS), decide.write('cart.html', PAGE), decide.reply('*Cart* — with a checkout button.'));
+
+    const root = await slack.ask('U_ANA', 'a cart page');
+
+    assert.match(model.saw(calls + 1), /button \\?"Checkout 1\\?" has a count in its name/, 'the model is told what to fix');
+    assert.match(model.saw(calls + 2), /Now write the page following the contract/, 'the fixed plan goes through');
+    assert.equal(slack.versions(root).length, 1);
+    assert.equal(model.pending(), 0);
+  });
+
   // PLAN_THINKING=on: thinking pays for the short plan, not for the long page.
   test('With thinking for the plan, the plan is made first and the page is written from it', async () => {
     config.model.planThinking = true;

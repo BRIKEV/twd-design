@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { listRepoFiles, readRepoFile } from '../github/files.ts';
 import { openPullRequest } from '../github/pull-request.ts';
 import { applyEdits } from '../prototype/edits.ts';
+import { lintPlan } from '../prototype/plan-lint.ts';
 import { ensureFormShim } from '../prototype/form-shim.ts';
 import type { PrototypeState, TurnContext } from './types.ts';
 
@@ -52,6 +53,7 @@ export function prototypeTools(state: PrototypeState, ctx: TurnContext) {
     },
   });
 
+  let rejected = 0;
   // Test first: the model commits to the scenarios (screens, routes, names) before it writes the page.
   // In the evals this ended green 9 of 9 times, against 7 of 9 writing the page first.
   const planScenarios = createTool({
@@ -66,6 +68,14 @@ export function prototypeTools(state: PrototypeState, ctx: TurnContext) {
         'where (header or #app); the initial data they rely on; one line per action saying what it changes.'),
     }),
     execute: async ({ code, contract }) => {
+      // Rules the model skips are checked here, so they cost a step instead of a browser run and a fix round.
+      // After two rejections the plan goes through as it is: the browser check still catches what's left.
+      const problems = lintPlan(code, contract);
+      if (problems.length && rejected < 2) {
+        rejected++;
+        state.calls.push(`plan:rejected(${problems.length})`);
+        return { ok: false, problems, next: 'Fix these and call plan_scenarios again with the whole script and contract.' };
+      }
       state.calls.push(`plan:${(code.match(/\bit\(/g) ?? []).length}`);
       state.plan = { code, contract };
       return { ok: true, next: 'Now write the page following the contract: each element as it writes it, the initial data as it lists it, each action as it says. Put the scenarios verbatim in <script id="scenarios">.' };
