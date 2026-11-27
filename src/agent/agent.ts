@@ -24,7 +24,7 @@ let checkScenarios: ScenarioCheck | null = config.scenarioCheck ? runScenarios :
 export const setScenarioCheck = (c: ScenarioCheck | null) => { checkScenarios = c; };
 
 /** Fix rounds after the first run, before the version is posted as it is. */
-const FIX_ROUNDS = 2;
+const FIX_ROUNDS = 3;
 
 function fixRequest(html: string, report: ScenarioReport) {
   const failures = report.failed.map((f) => `- ${f.name}: ${f.error}`).join('\n');

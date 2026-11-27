@@ -62,14 +62,15 @@ describe('Scenarios pass before a version is posted', () => {
     assert.match(comment(root), /^Here is a first version\.\n\n.*4 TWD scenarios pass/, 'the team reads about the version, not the fix');
   });
 
-  test('Still failing after two fixes: it is posted, and the team is told which scenario fails', async () => {
+  test('Still failing after three fixes: it is posted, and the team is told which scenario fails', async () => {
     model.willDo(
       decide.write('settings.html', BROKEN), decide.reply('Here is a first version.'),
       decide.edit({ old: 'Email', new: 'Email alerts' }), decide.reply('Tried a fix.'),
       decide.edit({ old: 'Email alerts', new: 'Email' }), decide.reply('Tried another fix.'),
+      decide.edit({ old: 'Email', new: 'Email alerts' }), decide.reply('One last try.'),
     );
     const failing = fail(3, 'Settings > email is on', 'Assertion failed: Expected element to be checked');
-    reports.push(failing, failing, failing);
+    reports.push(failing, failing, failing, failing);
 
     const root = await slack.ask('U_ANA', 'notification settings');
 

@@ -28,6 +28,8 @@ All notable changes to this project are documented here. The project follows [Se
   sentences stay out of them, so they don't fail on arithmetic and port cleanly to the real app.
 - `intent.md` ends with a note for development: port the behavior the criteria describe, not the
   prototype's texts, fake data or markup.
+- Up to 3 fix rounds when a version's scenarios fail (was 2): a version takes longer rather than being
+  posted with failing scenarios.
 
 ### Added
 - Mastra Studio (`npm run studio`) runs one bot turn outside Slack, with traces of every model and tool call,
