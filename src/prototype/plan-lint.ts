@@ -12,7 +12,7 @@ const TEXT = new RegExp(String.raw`\b(?:find|get|query)(?:All)?By(?:Text|LabelTe
 const lineOf = (code: string, index: number) => code.slice(0, index).split('\n').length;
 
 /** What a planned scenarios script breaks, one problem per line, each saying how to fix it. Empty: fine. */
-export function lintPlan(code: string, contract?: string): string[] {
+export function lintPlan(code: string): string[] {
   try {
     new Script(code, { filename: 'scenarios' });
   } catch (err) {
@@ -24,7 +24,6 @@ export function lintPlan(code: string, contract?: string): string[] {
   }
 
   const problems: string[] = [];
-  const unplanned = new Set<string>();
   for (const m of code.matchAll(ROLE)) {
     const [, role, , name] = m;
     if (name.includes('${')) continue;
@@ -34,7 +33,6 @@ export function lintPlan(code: string, contract?: string): string[] {
         `("${name.replace(/\s*\(?\d+\)?\s*/g, ' ').trim()}") and put the count in an aria-hidden badge; check the count as ` +
         'its own text only if it is what the feature is about.');
     }
-    if (contract && !contract.includes(name)) unplanned.add(`${role} "${name}"`);
   }
   for (const m of code.matchAll(TEXT)) {
     const [, , text] = m;
@@ -46,12 +44,6 @@ export function lintPlan(code: string, contract?: string): string[] {
       problems.push(`line ${line}: "${text}" joins several texts into one. A query matches ONE element's whole text: ` +
         'query the one part the scenario is about (the total, the count, the heading), or a role.');
     }
-    // A text with a value ("Total €22.50") is written in the contract as its template ({{ price(total) }}).
-    if (contract && !/\d/.test(text) && !contract.includes(text)) unplanned.add(`"${text}"`);
-  }
-  if (unplanned.size) {
-    problems.push(`The page contract doesn't say which element holds: ${[...unplanned].join(', ')}. ` +
-      'Add each one, written as it will be in the page, and whether it is in the header or #app.');
   }
   return problems;
 }

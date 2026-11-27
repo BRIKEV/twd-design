@@ -32,10 +32,3 @@ test('an await inside twd.waitFor is a syntax error, with the line', () => {
   assert.match(problem, /query with getBy\*/);
 });
 
-test('every fixed name and text queried must be in the page contract', () => {
-  const code = it(`await screenDom.findByRole('button', { name: 'Apply coupon' });\nawait screenDom.findByText('Coupon applied');\nawait screenDom.findByText('Total €22.50');`);
-  const [problem] = lintPlan(code, 'button "Apply coupon" → #app: <button>Apply coupon</button>');
-  assert.match(problem, /doesn't say which element holds: "Coupon applied"/);
-  assert.doesNotMatch(problem, /Total/, 'a text with a value is written in the contract as its template');
-  assert.deepEqual(lintPlan(code, 'button "Apply coupon" → #app · "Coupon applied" → #app: <p role="status">Coupon applied</p>'), []);
-});

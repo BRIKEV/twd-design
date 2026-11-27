@@ -34,8 +34,7 @@ All notable changes to this project are documented here. The project follows [Se
   evals, 17 of 18 first-check failures were the page not showing exactly what the scenarios queried.
 - `plan_scenarios` checks the plan before the page is written and sends it back with the line and the fix
   when it breaks a scenario rule: a syntax error (an `await` inside `twd.waitFor`), a count inside a name
-  (`link "Wishlist 1"`), a text made of several pieces (`'1 item · Total €14.50'`), or a fixed name or text
-  the page contract doesn't place. After two rejections the plan goes through as it is.
+  (`link "Wishlist 1"`), a text made of several pieces (`'1 item · Total €14.50'`). After two rejections the plan goes through as it is.
 - `PLAN_THINKING=on` turns GLM's thinking on only while reading the code and planning a version; the page
   is then written without it, from the plan and the code read.
 - Up to 3 fix rounds when a version's scenarios fail (was 2): a version takes longer rather than being

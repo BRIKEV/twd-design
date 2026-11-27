@@ -70,7 +70,7 @@ export function prototypeTools(state: PrototypeState, ctx: TurnContext) {
     execute: async ({ code, contract }) => {
       // Rules the model skips are checked here, so they cost a step instead of a browser run and a fix round.
       // After two rejections the plan goes through as it is: the browser check still catches what's left.
-      const problems = lintPlan(code, contract);
+      const problems = lintPlan(code);
       if (problems.length && rejected < 2) {
         rejected++;
         state.calls.push(`plan:rejected(${problems.length})`);
