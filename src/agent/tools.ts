@@ -67,7 +67,7 @@ export function prototypeTools(state: PrototypeState, ctx: TurnContext) {
         'The page contract: every role + name and text the scenarios query, each with the one element that holds it and ' +
         'where (header or #app); the initial data they rely on; one line per action saying what it changes.'),
     }),
-    execute: async ({ code, contract }) => {
+    execute: async ({ code }) => {
       // Rules the model skips are checked here, so they cost a step instead of a browser run and a fix round.
       // After two rejections the plan goes through as it is: the browser check still catches what's left.
       const problems = lintPlan(code);
@@ -77,7 +77,6 @@ export function prototypeTools(state: PrototypeState, ctx: TurnContext) {
         return { ok: false, problems, next: 'Fix these and call plan_scenarios again with the whole script and contract.' };
       }
       state.calls.push(`plan:${(code.match(/\bit\(/g) ?? []).length}`);
-      state.plan = { code, contract };
       return { ok: true, next: 'Now write the page following the contract: each element as it writes it, the initial data as it lists it, each action as it says. Put the scenarios verbatim in <script id="scenarios">.' };
     },
   });
@@ -173,7 +172,6 @@ export function prototypeTools(state: PrototypeState, ctx: TurnContext) {
         const content = await readRepoFile(ctx.design.repo, clean, ctx.design.ref);
         state.calls.push(`read:${clean}`);
         if (content == null) return { ok: false, error: `File not found: ${clean}` };
-        (state.reads ??= []).push({ path: clean, content: content.slice(0, MAX_READ) });
         if (content.length <= MAX_READ) return { ok: true, content };
         return { ok: true, content: content.slice(0, MAX_READ), truncated: `Only the first ${MAX_READ} of ${content.length} characters.` };
       } catch (err) {

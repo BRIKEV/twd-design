@@ -17,8 +17,6 @@ export const config = {
     id: (env.MODEL ?? 'zai/glm-5.3') as `${string}/${string}`,
     // GLM thinking roughly doubles output tokens and adds minutes per turn. Off unless THINKING=on.
     thinking: env.THINKING === 'on',
-    // Thinking only while reading and planning (plan_scenarios); the page is then written without it.
-    planThinking: env.PLAN_THINKING === 'on',
   },
   github: {
     appId: env.GITHUB_APP_ID,

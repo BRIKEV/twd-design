@@ -3,7 +3,7 @@
 // Runs every case of the dataset through one bot turn (the design-turn workflow) with the real model, the
 // real GitHub reads at the pinned commit and the real scenario check, and scores each run. It calls a paid
 // model: it is not part of npm test or CI. The model and switches come from the environment (MODEL,
-// PLAN_THINKING...), so pass the env file: node --env-file=.env evals/run.ts.
+// THINKING...), so pass the env file: node --env-file=.env evals/run.ts.
 
 import { execSync } from 'node:child_process';
 import { mkdirSync, appendFileSync, writeFileSync } from 'node:fs';
@@ -37,7 +37,7 @@ const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
 const file = join(dir, `${stamp}-${values.label}.jsonl`);
 
 const branch = execSync('git rev-parse --abbrev-ref HEAD', { cwd: import.meta.dirname }).toString().trim();
-const variant = { label: values.label, branch, model: config.model.id, PLAN_THINKING: config.model.planThinking, scenarioCheck: config.scenarioCheck };
+const variant = { label: values.label, branch, model: config.model.id, MODEL_THINKING: config.model.thinking, scenarioCheck: config.scenarioCheck };
 console.log(`${data.length} runs · ${JSON.stringify(variant)}\n→ ${file}\n`);
 
 type Row = { id: string; calls: string[]; scores: Record<string, number | null>; error?: string };

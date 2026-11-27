@@ -10,9 +10,10 @@ import type { ChatMessage, DesignContext, PrototypeState, TurnContext } from './
 // GLM takes `thinking` in the request body; Mastra passes it through from providerOptions keyed by
 // the provider id (zai or zai-coding-plan). Other providers ignore it.
 const provider = config.model.id.split('/')[0];
-const thinking = (on: boolean) =>
-  provider.startsWith('zai') ? { [provider]: { thinking: { type: on ? 'enabled' : 'disabled' } } } : undefined;
-const providerOptions = thinking(config.model.thinking);
+const providerOptions =
+  provider.startsWith('zai') && !config.model.thinking
+    ? { [provider]: { thinking: { type: 'disabled' } } }
+    : undefined;
 
 // Always MODEL in production. Tests swap in a scripted model to replay whole conversations.
 let model: MastraModelConfig = config.model.id;
@@ -42,14 +43,18 @@ ${html}`;
  * tracingContext: only from Mastra Studio and the evals, so the model and tool calls show up in its traces.
  */
 export async function runDesignAgent(history: ChatMessage[], state: PrototypeState, ctx: TurnContext, abortSignal?: AbortSignal, tracingContext?: TracingContext) {
-  const tools = prototypeTools(state, ctx);
-  const agent = new Agent({ id: 'twd-design', name: 'TWD Design', instructions: loadInstructions(), model, tools });
+  const agent = new Agent({
+    id: 'twd-design',
+    name: 'TWD Design',
+    instructions: loadInstructions(),
+    model,
+    tools: prototypeTools(state, ctx),
+  });
 
   const messages = [...designMessages(ctx.design, ctx.issue), ...prototypeMessages(state), ...history];
   const options = { maxSteps: 16, providerOptions, abortSignal, tracingContext };
-  const { first, usage } = config.model.planThinking && !config.model.thinking
-    ? await planThenWrite(agent, tools, messages, state, options)
-    : await agent.generate(messages, options).then((r) => ({ first: r, usage: [r.usage] }));
+  const first = await agent.generate(messages, options);
+  const usage = [first.usage];
 
   // A new version runs its scenarios; failures go back to the model, up to FIX_ROUNDS times.
   let scenarios: ScenarioReport | undefined;
@@ -70,31 +75,6 @@ export async function runDesignAgent(history: ChatMessage[], state: PrototypeSta
     }
   }
   return { text: first.text, usage: sumUsage(usage), scenarios, checks };
-}
-
-// PLAN_THINKING=on: the model reads and plans with thinking on, without the tools that write the page, then
-// writes the page without thinking, following the plan. Thinking pays for a short plan, not for the page.
-// A turn that plans nothing (a question, an approval) ends after the first call.
-async function planThenWrite(
-  agent: Agent, tools: ReturnType<typeof prototypeTools>, messages: ChatMessage[], state: PrototypeState,
-  options: { maxSteps: number; providerOptions: unknown; abortSignal?: AbortSignal; tracingContext?: TracingContext },
-) {
-  const { write_prototype, edit_prototype, ...planTools } = tools;
-  const planner = new Agent({
-    id: 'twd-design-plan', name: 'TWD Design (plan)', model, tools: planTools,
-    instructions: `${loadInstructions()}\n\n## This step\n\nYou can read and plan, not write the page: a change needs ` +
-      '`plan_scenarios` (scenarios + page contract); the page is written right after, from your plan. A question or ' +
-      'an approval needs no plan: answer it.',
-  });
-  const plan = await planner.generate(messages, { ...options, providerOptions: thinking(true) } as never);
-  if (!state.plan) return { first: plan, usage: [plan.usage] };
-  const code = (state.reads ?? []).map((r) => `### ${r.path}\n\n\`\`\`\n${r.content}\n\`\`\``).join('\n\n');
-  const write = await agent.generate([
-    ...messages,
-    { role: 'user', content: `Plan for this version. Write the page now, following it.\n\nScenarios:\n${state.plan.code}\n\n` +
-      `Page contract:\n${state.plan.contract}${code ? `\n\nThe product code read for it:\n\n${code}` : ''}` },
-  ], options as never);
-  return { first: write, usage: [plan.usage, write.usage] };
 }
 
 type Usage = { inputTokens?: number; outputTokens?: number; totalTokens?: number };
