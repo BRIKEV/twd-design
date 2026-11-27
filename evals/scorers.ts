@@ -86,4 +86,11 @@ export const inputKTokens = createScorer({
   .preprocess(({ run }: { run: Run }) => (run.output ? { tokens: run.output.usage.inputTokens ?? 0 } : notScorable('the turn failed')))
   .generateScore(({ results }) => Math.round(results.preprocessStepResult.tokens / 100) / 10);
 
-export const SCORERS = [firstCheckGreen, endsGreen, fixRounds, readTheCode, noVersionForQuestion, seconds, inputKTokens];
+export const outputKTokens = createScorer({
+  id: 'output-ktokens',
+  description: 'Output tokens of the turn, in thousands (thinking counts here).',
+})
+  .preprocess(({ run }: { run: Run }) => (run.output ? { tokens: run.output.usage.outputTokens ?? 0 } : notScorable('the turn failed')))
+  .generateScore(({ results }) => Math.round(results.preprocessStepResult.tokens / 100) / 10);
+
+export const SCORERS = [firstCheckGreen, endsGreen, fixRounds, readTheCode, noVersionForQuestion, seconds, inputKTokens, outputKTokens];
