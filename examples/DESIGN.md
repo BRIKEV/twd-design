@@ -15,30 +15,26 @@ Stack: <e.g. Vue 3 + Tailwind 4>. <If you use Tailwind, say so: prototypes will 
 
 ## Tokens
 
-### Color
+CSS custom properties ready for the prototype's Tailwind `@theme`, with the exact values from the code
+(whatever your project uses: Tailwind, CSS variables, SCSS, a theme object):
 
-| Role | Value | Tailwind | Use |
-|---|---|---|---|
-| primary | `#2563eb` | `blue-600` | Main actions, links, focus ring |
-| primary-hover | `#1d4ed8` | `blue-700` | Hover on primary |
-| danger | `#dc2626` | `red-600` | Destructive actions, errors |
-| success | `#15803d` | `green-700` | Confirmations |
-| surface | `#ffffff` | `white` | Cards, modals |
-| background | `#f9fafb` | `gray-50` | Page background |
-| text | `#111827` | `gray-900` | Body text |
-| muted | `#6b7280` | `gray-500` | Secondary text, metadata |
-| border | `#e5e7eb` | `gray-200` | Dividers, input borders |
+```css
+--color-primary: #2563eb;       /* main actions, links, focus ring */
+--color-primary-hover: #1d4ed8; /* hover on primary */
+--color-danger: #dc2626;        /* destructive actions, errors */
+--color-success: #15803d;       /* confirmations */
+--color-surface: #ffffff;       /* cards, modals */
+--color-background: #f9fafb;    /* page background */
+--color-text: #111827;          /* body text */
+--color-muted: #6b7280;         /* secondary text, metadata */
+--color-border: #e5e7eb;        /* dividers, input borders */
+--font-sans: Inter, system-ui, sans-serif;
+--radius-card: 8px;             /* cards, inputs, buttons */
+--shadow-card: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+```
 
-### Typography
-
-- Font: <e.g. Inter, from Google Fonts; fallback system-ui>.
-- Scale: page title <text-3xl bold>, section title <text-xl semibold>, body <text-base>, small <text-sm>.
-
-### Spacing, radius, shadows
-
-- Spacing: <4px base; cards p-6, page px-4 py-10, gaps 4/8/16/24>.
-- Radius: <rounded-lg (8px) for cards, inputs and buttons; rounded-full for avatars>.
-- Shadows: <shadow-md for cards, shadow-lg for modals>.
+- Type scale: page title <30px bold>, section title <20px semibold>, body <16px>, small <14px>.
+- Spacing: <4px base; cards 24px padding, page 16px × 40px, gaps 4/8/16/24>.
 
 ## Layout
 
@@ -63,6 +59,15 @@ Stack: <e.g. Vue 3 + Tailwind 4>. <If you use Tailwind, say so: prototypes will 
 - **Loading**: <skeletons for lists, spinner inside buttons>.
 - **Error**: <inline message with a retry action>.
 
+## Accessibility and naming
+
+- Controls: <named by their visible text; icon buttons and repeated controls by aria-label: "Delete {name}",
+  "Edit {name}">.
+- Header and navigation: <links "Dashboard", "Projects", "Settings"; account menu button "Account">.
+- Messages: <success in role="status", errors in role="alert">. Form errors: <under the field, linked with
+  aria-describedby>.
+- Each screen: <one h1 with the screen name; main content in <main>>.
+
 ## Content
 
 - Language: <English>. Tone: <direct and friendly, no exclamation marks>.
@@ -85,6 +90,7 @@ list per screen: it stays true when screens are added.
 - Pages and features: `<pages in src/pages/ are thin; each feature's UI lives in src/features/<feature>/>`
 - Shared components: `<src/shared/ui/>`
 - Tokens: `<src/shared/styles/tokens.css>`
+- Tests: `<src/**/*.test.tsx, Vitest + Testing Library; helpers in test/utils.tsx>` · mocks/fixtures: `<test/fixtures/>`
 
 ## Known gaps
 

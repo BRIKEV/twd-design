@@ -27,9 +27,11 @@ On the default branch, exactly at `design/DESIGN.md`. Commit it like any other f
 The whole file goes to the model as the product's design guide, next to a reference prototype built with
 **Tailwind**. The model then:
 
-- turns your color, radius, shadow and font tokens into Tailwind theme tokens (`bg-primary`,
+- puts your color, radius, shadow and font tokens in the prototype's Tailwind `@theme` (`bg-primary`,
   `rounded-card`…),
 - builds screens out of the components you describe, with the states you list,
+- names controls and announces messages the way your app does, so its TWD scenarios query what
+  development will build,
 - writes copy with your product's vocabulary and tone,
 - respects the constraints you write down (what exists, what doesn't, what to avoid).
 
@@ -44,13 +46,14 @@ Start from the template in [`examples/DESIGN.md`](https://github.com/BRIKEV/twd-
 | Section | What to put in it |
 |---|---|
 | **Product** | One paragraph: what the product is, who uses it, the tone (serious, friendly, dense, airy). |
-| **Tokens** | Colors with their role (primary, danger, surface, text, muted), typography scale, spacing, radius, shadows. Hex values, plus the Tailwind name if you use Tailwind. |
+| **Tokens** | Colors with their role (primary, danger, surface, text, muted), fonts, radius, shadows, as CSS custom properties ready for Tailwind's `@theme` (`--color-primary: #2563eb;`). Exact values, whatever your project uses: Tailwind, CSS variables, SCSS or a theme object. |
 | **Layout** | Page width, header, navigation, grid, how screens are usually composed. |
 | **Components** | Buttons, inputs, cards, tables, modals, toasts… What each looks like and when to use which variant. |
 | **States** | Empty, loading, error, success: how your product shows each one. |
+| **Accessibility and naming** | How controls get their accessible name (visible text, labels, `aria-label` patterns like "Delete {name}"), the names of the header and navigation links, how messages are announced (`role="status"`, `role="alert"`) and how form errors reach their field. The bot's scenarios query by role and name, like Testing Library: with this they use the names your app uses. Write what the code does today, even if it's inconsistent. |
 | **Content** | Vocabulary (what you call things), tone of messages, date and number formats, language. |
 | **Screens** | The main existing screens and their routes, so new prototypes fit in. |
-| **Where things are** | How the repo is organized: the router, where pages and features live, shared components, tokens. The bot follows it to the code of a screen before changing it ([below](#where-things-are)). |
+| **Where things are** | How the repo is organized: the router, where pages and features live, shared components, tokens, the tests and their mocks or fixtures. The bot follows it to the code of a screen before changing it ([below](#where-things-are)). |
 | **Known gaps** | Inconsistencies or missing pieces. The bot avoids copying them, and the prototype can point them out. |
 | **Constraints** | Rules for implementable prototypes: "no new colors", "tables always paginate", "use the existing modal". |
 
@@ -73,7 +76,11 @@ rarely change, so this section doesn't go stale when screens are added or moved.
 - Shared components: src/shared/ui/ (Button, Modal, Toggle, DataTable)
 - Tokens: src/shared/styles/tokens.css · Tailwind config: tailwind.config.ts
 - Copy: src/shared/i18n/en.json
+- Tests: src/**/*.test.tsx (Vitest + Testing Library, helpers in test/utils.tsx) · fixtures in test/fixtures/
 ```
+
+Point it to your tests, whatever kind they are (TWD, unit, end-to-end): they show how the UI is queried and
+what realistic data looks like, and the bot reads them when it needs to.
 
 Without it, the bot browses folders from the root to find the router, which works but takes more reads.
 
@@ -94,20 +101,29 @@ components, the router and the main pages. If there is a CLAUDE.md, AGENTS.md or
 
 Sections:
 1. Product: one paragraph on what it is, who uses it, the tone.
-2. Tokens: colors with their role (primary, danger, surface, text, muted), type scale, spacing, radius,
-   shadows. Exact values from the code, plus the Tailwind class if the project uses Tailwind.
+2. Tokens: colors with their role (primary, danger, surface, text, muted), fonts, radius and shadows as
+   CSS custom properties ready for Tailwind 4's @theme, one per line with its role in a comment:
+   --color-primary: #2563eb; /* main actions, links */  --radius-card: 14px;  --shadow-card: ...;
+   Exact values from the code, whatever it uses (Tailwind, CSS variables, SCSS, a theme object).
+   Then the type scale and spacing in one or two lines.
 3. Layout: page width, header, navigation, how a screen is usually composed.
 4. Components: the shared components (buttons, inputs, cards, tables, modals, toasts), what each looks
    like and when each variant is used.
 5. States: how empty, loading, error and success are shown today.
-6. Content: vocabulary (what things are called in the UI), tone of messages, date and number formats,
+6. Accessibility and naming: how controls get their accessible name (visible text, <label>, aria-label
+   patterns for repeated controls such as "Delete {name}"), the exact names of the header and navigation
+   links and buttons, how messages are announced (role="status", role="alert", aria-live), how form errors
+   reach their field, and the headings and landmarks of a screen. What the code does today, even if it is
+   inconsistent; what is missing goes to Known gaps.
+7. Content: vocabulary (what things are called in the UI), tone of messages, date and number formats,
    language.
-7. Screens: the main screens with their routes, in one line each.
-8. Where things are: how the code is organized, not a list per screen: the router file, where pages and
+8. Screens: the main screens with their routes, in one line each.
+9. Where things are: how the code is organized, not a list per screen: the router file, where pages and
    feature code live and how a page reaches its components, the folder of shared components, the
-   tokens or theme file. Real paths from this repo.
-9. Known gaps: inconsistencies or missing pieces you found.
-10. Constraints: rules a prototype must follow to be implementable here.
+   tokens or theme file, the tests of any kind (where they live, their helpers) and the mocks or
+   fixtures with sample data. Real paths from this repo.
+10. Known gaps: inconsistencies or missing pieces you found.
+11. Constraints: rules a prototype must follow to be implementable here.
 
 Values, not adjectives. Don't invent anything you didn't see in the code; write "unknown" instead.
 ```
@@ -120,7 +136,7 @@ start.
 
 - **Short beats complete.** It is sent on every turn: aim for 1–4 pages (roughly 2–15 KB). Link out to
   your full design system instead of pasting it.
-- **Values, not adjectives.** `primary: #2563eb (blue-600)` instead of "a vibrant blue".
+- **Values, not adjectives.** `--color-primary: #2563eb;` instead of "a vibrant blue".
 - **Name the roles.** "Danger buttons only for destructive actions, always with a confirmation dialog" is
   more useful than listing every button.
 - **Write down the gaps.** "We have no empty states yet" lets the bot propose one and flag it for you.

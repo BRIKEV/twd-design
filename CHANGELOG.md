@@ -28,6 +28,9 @@ All notable changes to this project are documented here. The project follows [Se
   sentences stay out of them, so they don't fail on arithmetic and port cleanly to the real app.
 - `intent.md` ends with a note for development: port the behavior the criteria describe, not the
   prototype's texts, fake data or markup.
+- The DESIGN.md guide, its prompt and `examples/DESIGN.md` ask for tokens as CSS custom properties ready for
+  Tailwind's `@theme`, a new "Accessibility and naming" section (how controls are named, the header's links,
+  how messages are announced), and where the tests and their mocks or fixtures live.
 - The plan comes with a page contract: the one element that holds each name and text the scenarios query
   (and whether it's in the header or `#app`), the initial data they rely on, and what each action changes.
   Scenarios prefer roles over text and never query a composed string like `'1 item · Total €14.50'`: in the
