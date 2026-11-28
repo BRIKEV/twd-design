@@ -8,7 +8,7 @@ description: Deploy TWD Design on Render with one click, using the published ima
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/BRIKEV/twd-design)
 
 The button reads the repo's [Blueprint](https://github.com/BRIKEV/twd-design/blob/main/render.yaml), which
-runs the published image `ghcr.io/brikev/twd-design:0.3`: nothing to fork, nothing to build.
+runs the published image `ghcr.io/brikev/twd-design:0.4`: nothing to fork, nothing to build.
 
 ## Before you start
 

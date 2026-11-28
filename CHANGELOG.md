@@ -4,6 +4,13 @@ All notable changes to this project are documented here. The project follows [Se
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-28
+
+Image: `ghcr.io/brikev/twd-design:0.4.0`. Render services built from the Blueprint move to `:0.4` on their next sync.
+
+Prototypes reach Slack with their TWD scenarios passing: in the evals, with up to 3 fix rounds, 62 of 63
+versions posted passed them (the other one hit a model API that stopped answering), in about 85 s per turn.
+
 ### Changed
 - Prototypes are built with Vue 3 (global build from jsDelivr) instead of Alpine.js. Text is interpolated
   with `{{ }}` inside one element and everything conditional uses `v-if`, so TWD scenarios query the page
@@ -37,11 +44,17 @@ All notable changes to this project are documented here. The project follows [Se
   evals, 17 of 18 first-check failures were the page not showing exactly what the scenarios queried.
 - `plan_scenarios` checks the plan before the page is written and sends it back with the line and the fix
   when it breaks a scenario rule: a syntax error (an `await` inside `twd.waitFor`), a count inside a name
-  (`link "Wishlist 1"`), a text made of several pieces (`'1 item · Total €14.50'`). After two rejections the plan goes through as it is.
+  (`link "Wishlist 1"`), a text made of several pieces (`'1 item · Total €14.50'`). After two rejections the
+  plan goes through as it is.
 - Up to 3 fix rounds when a version's scenarios fail (was 2): a version takes longer rather than being
   posted with failing scenarios.
 
 ### Added
+- Evals (`npm run evals`, #1): a small dataset (a change to an existing screen, a new screen, a filter and a
+  question) runs through one bot turn with the real model, the real repo reads pinned to a commit and the real
+  scenario check, scored with Mastra code scorers: first check green, ends green, fix rounds, code read before
+  changing a screen, no version for a question, seconds and tokens. Reports keep every check's failures. It
+  calls a paid model, so it is not part of `npm test` or CI.
 - Mastra Studio (`npm run studio`) runs one bot turn outside Slack, with traces of every model and tool call,
   as the base for the evals (#1). Code reads can be pinned to a commit (`ref`), so eval results stay comparable.
 
@@ -105,5 +118,8 @@ First release. Image: `ghcr.io/brikev/twd-design:0.1.0` (linux/amd64, linux/arm6
 - `/healthz`, configuration validation at startup, JSON logs, graceful shutdown on `SIGTERM`.
 - Deterministic test suite (`npm test`, `node:test`, no network): business stories end to end with a fake Slack channel, a fake GitHub repo and a scripted model, plus unit tests for edits, repo links, the form shim and GitHub App auth. Runs in CI.
 
-[Unreleased]: https://github.com/BRIKEV/twd-design/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/BRIKEV/twd-design/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/BRIKEV/twd-design/compare/v0.3.0...v0.4.0
+[0.3.0]: https://github.com/BRIKEV/twd-design/compare/v0.2.0...v0.3.0
+[0.2.0]: https://github.com/BRIKEV/twd-design/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/BRIKEV/twd-design/releases/tag/v0.1.0

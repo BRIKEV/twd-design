@@ -7,7 +7,7 @@ services:
     name: twd-design
     runtime: image
     image:
-      url: ghcr.io/brikev/twd-design:0.3   # 0.3.x patches on every redeploy
+      url: ghcr.io/brikev/twd-design:0.4   # 0.4.x patches on every redeploy
     plan: starter
     healthCheckPath: /healthz
     envVars:
